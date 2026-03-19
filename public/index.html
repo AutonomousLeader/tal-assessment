@@ -1,0 +1,1725 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAL Self Assessment Demo</title>
+
+    <!-- React and ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600;1,700;1,800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1C1C1C;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+// ─── API CONFIGURATION ──────────────────────────────────────────────────────
+const API_BASE = ""; // Same-origin — frontend and API served from one server
+
+const BRAND = {
+  dark: "#1C1C1C",
+  dark2: "#2A2A2A",
+  mid: "#3A3A3A",
+  accent: "#087E8B",
+  teal: "#087E8B",
+  paleTeal: "#BEE7E8",
+  offWhite: "#F5F5F5",
+  gray: "rgba(240,240,240,0.55)",
+  lightGray: "#f0f0f0",
+  black: "#000000",
+  coral: "#FF5A5F"
+};
+
+// ─── CATEGORIES ───────────────────────────────────────────────────────────────
+const CATEGORIES = [
+  { name: "Foundation & Clarity", shortName: "Foundation", indices: [0, 1], level: "L1" },
+  { name: "Systems & Execution", shortName: "Systems", indices: [2, 3], level: "L2" },
+  { name: "Team & Autonomy", shortName: "Team", indices: [4, 5, 6], level: "L3–L4" },
+  { name: "Leadership & Authority", shortName: "Leadership", indices: [7, 8, 9], level: "L4–L5" },
+  { name: "The Strategist", shortName: "Strategist", indices: [10, 11], level: "L6–L7" },
+];
+
+// ─── FRAMING STATEMENT ────────────────────────────────────────────────────────
+const FRAMING_STATEMENT = "This assessment measures one thing — how far you've already come in building a business.\n\nEvery owner starts in the same place: doing the work themselves. The question is how far your business has grown since that starting point.\n\nAnswer honestly. The more accurate your answers, the more useful your results will be.";
+
+// ─── QUESTIONS ────────────────────────────────────────────────────────────────
+const questions = [
+  { id: 1, category: "Foundation & Clarity", pillar: "Profit", text: "Do new clients come in on a consistent, predictable schedule?", yes: "Yes — we have a real system. It's not just hoping the phone rings.", inProgress: "In progress — we're building toward that, but right now it's mostly referrals and relationships driving the pipeline.", notYet: "Not yet — we're still in the early stages of creating a predictable client acquisition system." },
+  { id: 2, category: "Foundation & Clarity", pillar: "Perspective", text: "When clients refer someone to you, are they recommending the business — rather than recommending you personally?", yes: "Yes — they're recommending what we do, not just who I am.", inProgress: "In progress — it's a mix. Some refer the business, but many are still referring me by name.", notYet: "Not yet — the reputation is built around me personally, which means there's a big opportunity to expand the brand beyond myself." },
+  { id: 3, category: "Systems & Execution", pillar: "Process", text: "If you hired someone tomorrow and handed them your training documents, could they do the job without you needing to explain it?", yes: "Yes — the playbooks are solid. Someone could step in and get it done.", inProgress: "In progress — we have some documentation, but a new hire would still need hands-on guidance for the important parts.", notYet: "Not yet — the knowledge is there, it just hasn't been captured into a system yet. That's the next unlock." },
+  { id: 4, category: "Systems & Execution", pillar: "Program", text: "Have you automated or systemized the repetitive tasks your team does every week?", yes: "Yes — if it repeats, we've built a system or automated it.", inProgress: "In progress — we've automated some things, but there's still manual work that could be systemized.", notYet: "Not yet — most of the repetitive work is still done by hand, which means there's a lot of leverage waiting to be built." },
+  { id: 5, category: "Team & Autonomy", pillar: "People", text: "When you hand off a project to your team, does it come back done right the first time?", yes: "Yes — my team owns their work and delivers it the right way.", inProgress: "In progress — it's getting better, but we're still refining the handoff process to get consistent first-time results.", notYet: "Not yet — I'm still closely involved in quality control, which tells me the next growth step is building stronger handoff systems." },
+  { id: 6, category: "Team & Autonomy", pillar: "Progress", text: "Do you have 5 to 7 numbers you look at every week that tell you whether the business is healthy?", yes: "Yes — I know exactly where the business stands every Monday morning.", inProgress: "In progress — we track some numbers, but they're not yet organized into a weekly rhythm that drives decisions.", notYet: "Not yet — I'm still relying more on instinct than data, which means a simple scorecard would be a quick win." },
+  { id: 7, category: "Team & Autonomy", pillar: "Visibility", text: "Without checking anything right now — do you know how much is in your pipeline as well as which client is most at risk of leaving?", yes: "Yes — those numbers are top of mind for me.", inProgress: "In progress — I have a general sense, but I'd need to check the details to be precise.", notYet: "Not yet — those aren't numbers I carry day to day yet, which shows me where to focus next." },
+  { id: 8, category: "Leadership & Authority", pillar: "Power", text: "Does your team have the authority to handle pricing exceptions, client complaints, and day-to-day decisions without coming to you?", yes: "Yes — they know exactly what they're authorized to decide without me.", inProgress: "In progress — some decisions are delegated, but most meaningful calls still route through me.", notYet: "Not yet — I'm still the primary decision point, which means defining clear decision authority is the next step." },
+  { id: 9, category: "Leadership & Authority", pillar: "Principles", text: "If your team had to make a difficult client decision tonight with no access to you — would they know exactly how you'd want them to handle it?", yes: "Yes — our standards are clearly defined and the team actually uses them.", inProgress: "In progress — they'd make a reasonable call based on what they've seen me do, but they wouldn't feel fully confident.", notYet: "Not yet — they'd likely wait for me, which tells me it's time to get our standards out of my head and into a shared framework." },
+  { id: 10, category: "Leadership & Authority", pillar: "The Source Shift", text: "Does your team maintain the same energy and confidence whether you're in the room or not?", yes: "Yes — the team holds the standard whether I'm there or not.", inProgress: "In progress — the team is growing into this, and my presence still elevates the room noticeably.", notYet: "Not yet — the team still looks to me as the energy source, which means there's an opportunity to develop more independent leadership." },
+  { id: 11, category: "The Strategist", pillar: "Strategy Time", text: "Are you spending most of your time working on the business rather than in it?", yes: "Yes — I've moved out of the day-to-day and into owner-level work.", inProgress: "In progress — I'm splitting my time between strategic work and execution, and gradually shifting the balance.", notYet: "Not yet — I'm still deep in the day-to-day, which means the next step is freeing myself up to focus on higher-leverage work." },
+  { id: 12, category: "The Strategist", pillar: "True Autonomy", text: "Could your business keep running at full capacity if you stepped away completely for 30 days?", yes: "Yes — the business runs without me.", inProgress: "In progress — it would run, but some things would slow down or wait for my return.", notYet: "Not yet — the business still relies on my daily involvement, which is exactly why building toward autonomy matters." },
+];
+
+// ─── IN-DEPTH ASSESSMENT ─────────────────────────────────────────────────────
+const P_NAMES = [
+  "Pipeline", "Profit", "Perspective", "Principles", "Program",
+  "People", "Process", "Progress", "Power"
+];
+
+const P_CORE_QUESTIONS = [
+  "Can you create business on purpose?",
+  "Do you understand and keep the money well?",
+  "Do you see the business clearly enough to grow it correctly?",
+  "What rules guide good decisions when you are not there?",
+  "What should be systemized or automated before adding headcount?",
+  "Do you have the right people in the right roles?",
+  "How does the work get done the right way every time?",
+  "How do you know what is working and what is broken?",
+  "Who holds the leverage to keep things moving?",
+];
+
+const deepQuestions = [
+  { p: "Pipeline", type: "ladder", text: "Which of these best describes how new business comes in?", options: [
+    { label: "New business comes from my personal effort — referrals, relationships, showing up. When I ease off, the flow slows down.", range: "1-2" },
+    { label: "We're doing marketing, but the message, the closing, and the follow-up still mostly run through me.", range: "3" },
+    { label: "We have real channels and follow-up systems that work — the next step is building depth so no single source carries too much weight.", range: "4-5" },
+    { label: "The business creates demand without me. Multiple channels, team-run. I'm not the closer or the message anymore.", range: "6-7" },
+  ]},
+  { p: "Pipeline", type: "reality", text: "If your single biggest source of new clients vanished tomorrow — what happens to your pipeline in 30 days?", options: [
+    { label: "We'd need to rebuild quickly — right now, most of our pipeline flows through that one source.", range: "1-2" },
+    { label: "We'd feel the impact significantly. A couple other sources might partially cover, but it would take effort.", range: "3" },
+    { label: "It would hurt, but the other channels would hold and keep us moving.", range: "4-5" },
+    { label: "We'd adjust. No single source carries more than a third of our demand.", range: "6-7" },
+  ]},
+  { p: "Profit", type: "ladder", text: "Which of these best describes how well you understand your money?", options: [
+    { label: "I know what's in the bank account. Pricing was set a while ago, and I haven't mapped out my margins in detail yet.", range: "1-2" },
+    { label: "Revenue is steadier, but I couldn't tell you my gross margin by service line off the top of my head.", range: "3" },
+    { label: "We have reports and dashboards — the next step is getting leaders to consistently use the numbers to drive their decisions.", range: "4-5" },
+    { label: "The business has clear economics. Leaders understand their margins. Capital is allocated strategically.", range: "6-7" },
+  ]},
+  { p: "Profit", type: "reality", text: "If your revenue dropped 30% next month — how quickly would you know, and what would you do?", options: [
+    { label: "I'd probably notice it in the bank account first, and my instinct would be to go into hustle mode to close the gap.", range: "1-2" },
+    { label: "I'd know within a couple weeks. I'd know where to cut, but I'd be the only one making that call.", range: "3" },
+    { label: "I'd see it in the dashboard immediately. My leaders would know the impact on their areas.", range: "4-5" },
+    { label: "The business would self-correct. We have models, reserves, and leaders who manage through it.", range: "6-7" },
+  ]},
+  { p: "Perspective", type: "ladder", text: "Which of these best describes how you see your role in the business?", options: [
+    { label: "Right now, I am the central driver. Growth still comes from more of my personal effort — and that's the starting point for change.", range: "1-2" },
+    { label: "I trust my team with execution, but I'm still the final filter for anything important.", range: "3" },
+    { label: "The business runs well — but I'm still the architect. If I stopped designing the structure, things would weaken over time.", range: "4-5" },
+    { label: "I see myself as separate from the business. It operates without me. My role is vision and stewardship.", range: "6-7" },
+  ]},
+  { p: "Perspective", type: "reality", text: "If you stepped away for 30 days — no calls, no checking in — what would you come back to?", options: [
+    { label: "The business would feel my absence quickly — probably within the first week. That tells me where to build next.", range: "1-2" },
+    { label: "The work would get done, but the quality and decisions would drift without me interpreting things.", range: "3" },
+    { label: "The business would run well. But some important decisions would stack up waiting for me.", range: "4-5" },
+    { label: "It would be fine. I've done it before. The team handles it.", range: "6-7" },
+  ]},
+  { p: "Principles", type: "ladder", text: "Which best describes how your team makes decisions without you?", options: [
+    { label: "My standards still live mostly in my head. When I'm not there, people do their best — but they don't always have a clear framework to work from.", range: "1-2" },
+    { label: "We've talked about our values, but in a gray area, my team still isn't sure what I'd want.", range: "3" },
+    { label: "We have written principles and standards. Leaders carry them — but I'm still the one who reinforces them most.", range: "4-5" },
+    { label: "The culture runs without me. People know what we stand for and make decisions from it naturally.", range: "6-7" },
+  ]},
+  { p: "Principles", type: "reality", text: "A client situation comes up tonight that has never happened before. Your team has to decide without you. What happens?", options: [
+    { label: "They'd likely wait for me, or make their best call and hope it aligns — which tells me it's time to build a decision framework.", range: "1-2" },
+    { label: "They'd handle it based on what they've seen me do before — but they'd second-guess themselves.", range: "3" },
+    { label: "They'd reference our documented standards. The decision would be close to what I'd choose.", range: "4-5" },
+    { label: "They'd handle it the way we handle things. No hesitation. I'd be proud of the call.", range: "6-7" },
+  ]},
+  { p: "Program", type: "ladder", text: "Which best describes how technology and automation work in your business?", options: [
+    { label: "We're using basic tools — email, scheduling, maybe bookkeeping software. Most work is still done manually, which means there's a lot of room for leverage.", range: "1-2" },
+    { label: "We have apps and some automations, but the system logic mostly lives in my head. If something breaks, it's on me to fix it.", range: "3" },
+    { label: "We have real digital leverage. Someone owns the stack. But it's not fully scalable or leader-carried yet.", range: "4-5" },
+    { label: "Technology is a strategic layer. The team runs it, improves it, and spots leverage opportunities without me.", range: "6-7" },
+  ]},
+  { p: "Program", type: "reality", text: "Think about the last person you hired. What percentage of their daily work is repeatable and rule-based?", options: [
+    { label: "Most of it. We haven't built the systems yet to automate the routine work — that's the opportunity ahead.", range: "1-2" },
+    { label: "Probably half. We've automated some things, but there's still a lot of manual work that a system should handle.", range: "3" },
+    { label: "Less than a quarter. We've automated the routine stuff. But I'm still the one who spots new automation opportunities.", range: "4-5" },
+    { label: "Almost none. If it's repeatable, a program handles it. Humans do the judgment work.", range: "6-7" },
+  ]},
+  { p: "People", type: "ladder", text: "Which best describes your team right now?", options: [
+    { label: "I'm still the core driver. I have support, but nobody fully owns an outcome independently yet — and that's the next thing to build.", range: "1-2" },
+    { label: "I have capable people, but I still own too many of the important outcomes. They execute — I carry.", range: "3" },
+    { label: "My team is strong and intentional. But I'm still the one who architects the team structure and develops the talent.", range: "4-5" },
+    { label: "My people are genuinely better than me at their jobs. They develop each other. I'm not the strongest player anymore.", range: "6-7" },
+  ]},
+  { p: "People", type: "reality", text: "You hand your team a two-week project and make yourself completely unavailable. What does the output look like when you return?", options: [
+    { label: "The project would likely stall or come back needing significant direction — which shows me the gap to close.", range: "1-2" },
+    { label: "The work gets done, but the quality and judgment calls wouldn't be where I'd want them.", range: "3" },
+    { label: "It'd be solid. A few decisions might differ from mine, but the work holds.", range: "4-5" },
+    { label: "It'd be indistinguishable from if I were there. My team doesn't need me for this.", range: "6-7" },
+  ]},
+  { p: "Process", type: "ladder", text: "Which best describes how work gets done in your business?", options: [
+    { label: "The process still lives mostly in my head. If I were unavailable, the team would struggle to replicate it — which means documenting it is the next priority.", range: "1-2" },
+    { label: "We have some SOPs and checklists, but I still carry the improvement logic and exception handling.", range: "3" },
+    { label: "The operating layer is real. But it's not yet fully embedded across all teams and still needs my vigilance.", range: "4-5" },
+    { label: "Work moves through clear paths. Strong handoffs. Low dependence on me for correction or improvement.", range: "6-7" },
+  ]},
+  { p: "Process", type: "reality", text: "A capable new hire starts on Day 1. You hand them your documentation and step back. What breaks in two weeks?", options: [
+    { label: "Most things — we haven't captured our processes into documentation yet, so they'd learn by shadowing. The good news is that's a solvable problem.", range: "1-2" },
+    { label: "Some things work. But the important stuff — the judgment calls, the exceptions — those aren't captured yet.", range: "3" },
+    { label: "Most things hold. But workflow quality across different teams isn't perfectly consistent yet.", range: "4-5" },
+    { label: "Very little. The documentation is solid. They'd be productive within days.", range: "6-7" },
+  ]},
+  { p: "Progress", type: "ladder", text: "Which best describes how you track what is working and what is not?", options: [
+    { label: "Mostly by feel. I know things are off when they feel off — I haven't built a weekly scorecard yet, and that's the next step.", range: "1-2" },
+    { label: "We track some numbers, but I'm still the one who really understands what they mean.", range: "3" },
+    { label: "We have dashboards and scoreboards. But leaders don't consistently manage through them yet.", range: "4-5" },
+    { label: "The business sees itself clearly. Leaders coach from data. Early warning signals work without me.", range: "6-7" },
+  ]},
+  { p: "Progress", type: "reality", text: "Right now — without looking anything up — can you tell me your revenue this month, your pipeline value, and your top client risk?", options: [
+    { label: "I'd need to look all three up — they aren't numbers I carry day to day yet, and building that visibility is a clear next step.", range: "1-2" },
+    { label: "I could tell you revenue roughly. The other two I'd need to dig for.", range: "3" },
+    { label: "I know all three. But I'm probably the only one who does.", range: "4-5" },
+    { label: "Yes — and so could at least two other people on my team.", range: "6-7" },
+  ]},
+  { p: "Power", type: "ladder", text: "Which best describes who makes the important decisions in your business?", options: [
+    { label: "Most decisions still flow through me — pricing, client issues, approvals. I'm the central point, which means the next move is defining what can be delegated.", range: "1-2" },
+    { label: "Some things are shared, but the meaningful leverage — the real decisions — still come back to me.", range: "3" },
+    { label: "Authority is more structured. But the deeper judgment calls and risk decisions are still mine.", range: "4-5" },
+    { label: "Decisions go to the right people. I'm involved in strategy and vision, not operations and approvals.", range: "6-7" },
+  ]},
+  { p: "Power", type: "reality", text: "An edge-case decision comes up — pricing exception, difficult client, unexpected vendor issue. What happens?", options: [
+    { label: "It comes to me — that's the current reality, and it shows me where to build decision authority next.", range: "1-2" },
+    { label: "Someone might try to handle it, but they'd check with me before committing.", range: "3" },
+    { label: "My leaders would handle it. But they'd inform me after — and if it went wrong, I'd pull the authority back.", range: "4-5" },
+    { label: "My team handles it. I might hear about it later, or I might not. Either way, the outcome is good.", range: "6-7" },
+  ]},
+];
+
+// ─── P LEVEL DESCRIPTIONS (for BrandMark hover) ─────────────────────────────
+const P_LEVEL_DESC = {
+  Pipeline: [
+    null,
+    "New business comes from hustle, referrals, and whatever you can personally stir up.",
+    "More leads and visibility, but no real control over where demand comes from.",
+    "Marketing is more intentional, but lead flow still depends on your message and energy.",
+    "Real channels and follow-up systems exist. Not yet fully diversified or dependable.",
+    "Others help run the pipeline, but you still carry too much of the trust and closing weight.",
+    "The business creates demand without your daily involvement.",
+    "Demand is steady, measured, and not dependent on you.",
+  ],
+  Profit: [
+    null,
+    "Money is moving, but pricing and margins are still mostly judged by feel.",
+    "Revenue is growing, overhead is growing, and the money feels busier than it feels clear.",
+    "Revenue is steadier, but margins and financial precision aren't sharp enough for bold decisions.",
+    "Reports and dashboards are stronger, but numbers aren't fully shaping how leaders run the business.",
+    "The finance function is more supported, but you still carry too much of the real economic judgment.",
+    "Financial health is strong. The question is how money should be allocated strategically.",
+    "Durable economics and a trustworthy money system that supports freedom and asset value.",
+  ],
+  Perspective: [
+    null,
+    "You see the business mainly as an extension of yourself, your labor, and your standards.",
+    "You have help, but still see yourself as the real source of value.",
+    "You trust others with execution, but still see yourself as the final filter for important decisions.",
+    "You see systems clearly, but still view yourself as the indispensable architect.",
+    "The deepest issue is identity: your value is still tied to being needed.",
+    "You are more strategic and more free, but still feel the need to stay close.",
+    "You see yourself clearly as separate from the business. Free to lead by vision.",
+  ],
+  Principles: [
+    null,
+    "You have strong standards, but they live inside your personal judgment and aren't teachable yet.",
+    "Some values are spoken out loud, but they remain broad, verbal, and inconsistently applied.",
+    "Principles are clearer, but you still interpret what they mean in the moments that matter.",
+    "Written principles exist, but they aren't fully embedded across leaders and complexity.",
+    "You must stop being the personal guardian and let leaders carry the standard for real.",
+    "The principles hold more strongly now, but you still feel safer staying near the cultural layer.",
+    "A durable compass: people know what matters and how to decide without you.",
+  ],
+  Program: [
+    null,
+    "Basic tools exist, but most repeated work still happens manually.",
+    "More apps and templates, but the stack is shallow, scattered, and underused.",
+    "The system layer is more active, but you still shape most of the deeper logic behind it.",
+    "Real digital leverage, but the stack isn't fully embedded or leader-carried across growth.",
+    "Systems are strong enough that you should no longer be the only one spotting leverage.",
+    "The system layer is operationally mature. The question is strategic support for scale.",
+    "A durable leverage layer: technology handles what it should, and that strength belongs to the company.",
+  ],
+  People: [
+    null,
+    "You are mostly the team, with little or no real role design beyond occasional help.",
+    "You have support, but people are added for relief rather than clear outcome ownership.",
+    "More capable team members and clearer roles, but you still own too many important outcomes.",
+    "The human layer is stronger, but you still architect too much of the team structure personally.",
+    "You must stop being the strongest human in every key area and become a true developer of people.",
+    "The team is much stronger. Your challenge is trusting that capability fully at a distance.",
+    "Strong seat fit, strong leaders, and human capability that no longer depends on you.",
+  ],
+  Process: [
+    null,
+    "You know how to do the work, but the business mostly does not. It lives in memory and instinct.",
+    "Some checklists and SOPs exist, but they're partial and depend heavily on verbal explanation.",
+    "Workflows are stronger, but you still carry too much improvement logic and exception handling.",
+    "The operating layer is real, but not fully embedded across teams and growth complexity.",
+    "You must stop being the hidden guardian of operational consistency.",
+    "The operating layer is stronger and more durable. Your challenge is trusting it at a distance.",
+    "Work moves well through clear paths, strong handoffs, and low dependence on your correction.",
+  ],
+  Progress: [
+    null,
+    "You judge performance by feel: busyness, stress, cash in the account.",
+    "Some numbers are tracked, but visibility is partial, founder-held, and too shallow.",
+    "Scoreboards are stronger, but you still carry too much of the meaning behind the numbers.",
+    "The visibility layer is real, but leaders don't consistently manage through it yet.",
+    "You must stop being the deepest keeper of performance truth.",
+    "The business can see itself more clearly. Your challenge is trusting that visibility at distance.",
+    "Useful scoreboards, early warning signals, and leaders who think through performance without you.",
+  ],
+  Power: [
+    null,
+    "Almost all meaningful leverage lives in you: decisions, trust, quality, approvals, rescue.",
+    "Some activity is shared, but you still hold most meaningful leverage and exception handling.",
+    "Roles and ownership are stronger, but real leverage is still too concentrated in you.",
+    "Authority is more structured, but the deeper leverage map is still too founder-architected.",
+    "You must stop being the deepest holder of meaningful leverage and let others carry real weight.",
+    "Leverage is more distributed. Your challenge is trusting that power map without staying near it.",
+    "Real authority, lower hostage risk, and movement that no longer depends on you.",
+  ],
+};
+
+// ─── P LEVEL DESCRIPTIONS — LONG (for 9P breakdown expanded view) ────────────
+const P_LEVEL_DESC_LONG = {
+  Pipeline: [
+    null,
+    "New business comes entirely from your personal hustle — referrals, outreach, and whoever you can get to say yes. There is no lead system, no follow-up structure, and no dependable channel. If you stop moving, lead flow stops.",
+    "More word of mouth is coming in, but you still can't cause demand on purpose. There's no tracking of where leads come from, no channel strategy, no follow-up cadence. A good month can happen without the business learning how to repeat it.",
+    "Marketing is more intentional — some content, outreach, maybe a paid channel — but you still carry too much of the trust and closing weight. When a prospect gets unsure, you get pulled in. Conversion still depends on you showing up at the critical moment.",
+    "Real channels and follow-up systems exist. The business knows where leads come from and has structure around converting them. But the front end doesn't hold evenly — a strong week in one channel can hide fragility in the others.",
+    "The team can run the pipeline — generating leads, following up, moving conversations forward. But when trust gets shaky or a deal gets delicate, you're still the one everyone reaches for. Others can work leads, but they can't yet close the hardest ones without backup.",
+    "The business creates demand and moves deals forward without your daily involvement. The pipeline runs, but you still hover — checking lead flow when it softens, stepping in when a big deal gets delicate. Your presence is now habit, not necessity.",
+    "The business has a true demand engine. Leads, follow-up, and conversion are durable — not dependent on your charisma, rescue, or one fragile channel. Pipeline is a real business asset that belongs to the company, not the person who built it.",
+  ],
+  Profit: [
+    null,
+    "Revenue equals hours worked. Good months happen when you hustle harder, bad months when you slow down, and you've never been sure why. There's no forward model, no revenue projection, no margin awareness — you're making decisions from the bank balance.",
+    "Revenue is growing but margins feel tighter because the team costs money before they produce it. You're subsidizing growth with personal overwork and haven't updated pricing to reflect the real cost of delivery.",
+    "Revenue is more consistent and you're starting to see which services are worth delivering and which are eating your margin. You're not in survival mode anymore — you're in complexity mode, which is its own kind of overwhelming.",
+    "The Company Dashboard shows profit status weekly. You're making decisions from a forward model, not a bank balance. Margin by offer is visible and revenue trends are trackable weeks before they become problems.",
+    "The team reports their own financial metrics — you review numbers, you don't compile them. Profit is a managed system, not a monthly surprise. Revenue, margin, and pipeline health are visible to the people who affect them.",
+    "Profit is a strategic lever — you decide which offers to scale, wind down, or invest in based on margin and positioning. Financial decisions are about direction, not survival. You're deploying capital, not managing cash flow.",
+    "Revenue comes in whether you're working or not — not as a fluke, as a design. You've stopped being paid for your time and started being paid for your asset. You make capital allocation decisions, not revenue decisions.",
+  ],
+  Perspective: [
+    null,
+    "You see the business as an extension of yourself and your labor. The belief is 'no one can do this but me' — and it feels like a fact and a form of responsibility. It is actually the ceiling.",
+    "The belief has shifted from 'no one can do it but me' to something subtler: 'my clients hired ME — if someone else touches this, they'll leave.' You've hired people but you're still in every client interaction and key decision.",
+    "You've handed off execution but kept judgment. Your team is capable — they've been trained to ask permission. The belief that only you can make the important calls is keeping you in every meeting you should have left months ago.",
+    "You've built a capable team with solid documentation, but you're still the architect of every major system. The shift: your team can design and improve systems without you. Your job becomes enabling that process — not doing it.",
+    "This is The Source Shift — the hardest transition in the framework. At every level before this, your sense of value came from being the one with answers. Now importance must become impact-sourced: your people fix the problem because you developed them.",
+    "You're present by habit, not necessity. Your calendar has more operational involvement than the business requires because proximity feels like responsibility. The business doesn't need your proximity — it needs your vision.",
+    "Every limiting belief from Levels 1 through 6 has been replaced. You are not the business. The business operates, grows, and serves beyond your personal involvement. You are the architect, the steward, the vision-holder — not the engine.",
+  ],
+  Principles: [
+    null,
+    "Every standard and decision runs on one person's judgment — and nobody, including you, could write down exactly what that judgment is. It works because you're always there. That's also the problem.",
+    "When your team guesses wrong about what you'd want, you fix it yourself and feel a frustration you can't name. The standard exists — it just never left your head. The team is reading smoke signals, not a map.",
+    "You've said what you stand for in meetings and feedback sessions, but it disappears as soon as the conversation ends. The team absorbs your values through observation, not documentation. When you're not in the room, they're guessing.",
+    "The first operational principles are written — how to handle a client problem, what to do when a deadline is at risk. Your team has something to reach for when you're not in the room. The principles are functional but not yet cultural.",
+    "Principles are documented and shared as a real conversation about who the company is. New hires read them on day one. The culture is beginning to live outside of you — someone else could describe what the company stands for without you in the room.",
+    "Principles shape decisions you're not involved in — hiring calls, client conversations, pricing exceptions. The team uses them without prompting because they've become the operating language of the business, not just your philosophy.",
+    "The culture doesn't need you to maintain it. Decisions made when you're unreachable reflect your principles — not because the team is following rules, but because the principles became theirs too.",
+  ],
+  Program: [
+    null,
+    "Everything is done manually. Every recurring task — follow-ups, scheduling, invoicing, reporting — is done by hand, by you, every time. The opportunity cost is invisible because the alternative was never explored.",
+    "Tools exist but aren't connected. You're using apps for specific tasks but there's no integrated automation layer. Each team member uses their own tools, resulting in inconsistent output and duplicated effort.",
+    "Automation is used more intentionally but still reactively. No one owns the program stack — tools get added when something hurts and forgotten when something else does. Your team spends human hours on machine-appropriate work.",
+    "Programs are treated as team members with defined roles. Someone owns the automation stack. AI is deployed for reporting, workflow management, and triage. The org chart includes both human roles and program roles.",
+    "Programs do what entry-level managers used to do — tracking, reporting, flagging, routing. Humans manage programs; programs manage tasks. Your involvement with day-to-day program management is near zero.",
+    "You make macro-level strategic decisions about organizational AI and automation — not managing tools, but deciding direction. Program is a strategic asset category, not an operational convenience.",
+    "The organization has a self-optimizing technology layer. Dedicated roles manage and improve the program stack. Your relationship with technology is at the investment and vision level — deciding what it should accomplish in the next three to five years.",
+  ],
+  People: [
+    null,
+    "There is no team, or there is one person helping with overflow. You are the business. Every sale, every delivery, every problem runs through you. The business cannot operate in your absence.",
+    "You have people, but you're still doing the real work. Delegation comes back wrong so often that it's faster to just do it yourself. The team isn't incompetent — they are underdeveloped because the system around them is underdeveloped.",
+    "The team is capable — they just aren't trusted, by you or by themselves. They've been trained to ask permission rather than act. They're waiting because you've rewarded waiting. The fix is a permission structure change, not a personnel change.",
+    "Every team member has a clearly owned responsibility area. A new hire gets up to speed from written documentation in days, not months of your time. The team is a structure with ownership and accountability at every level.",
+    "The best performers are becoming informal leaders. The team is starting to self-correct and self-improve without being asked. You haven't built a formal leadership layer yet, but the raw material is there.",
+    "The team has leaders, not just executors. At least one person can run a significant section of the business without you — and does. The business is developing its own capacity to develop people.",
+    "You've built a team where every person is better than you at their specific job — and that's the goal. The leadership team is self-managing, succession is planned, and the organization develops its own leaders without you.",
+  ],
+  Process: [
+    null,
+    "Everything runs from memory and muscle — there is no playbook. If you were unavailable for two weeks, large parts of the business would stop. Nothing is written, nothing is transferable.",
+    "Documentation has started, inconsistently. Some things are written, most aren't, and training a new hire still takes months of your personal time. The documentation covers the steps but not the judgment.",
+    "Core delivery is documented, but edge cases still come to you because the documentation covers the steps — not the judgment behind them. The playbook exists but it's incomplete, and that incompleteness keeps you in the loop.",
+    "The operating rhythm — Weekly Alignment, Needles Moved, Coordination & Blockers — runs consistently, and the playbook is real and used. Process is something the team runs, not something you maintain.",
+    "The playbook is alive — it gets updated when something breaks, by the people closest to each function. The team owns process and improves it. The playbook gets better without you touching it.",
+    "There are documented processes for strategy review, quarterly planning, and growth decisions — not just client delivery. You're designing operating infrastructure at the organizational level. You built the system that builds the systems.",
+    "The playbook runs and improves without you — your team updates it, tests it, and passes it to new people without your involvement. Process is institutionalized — it exists independently of any individual, including you.",
+  ],
+  Progress: [
+    null,
+    "There is no measurement — you navigate entirely by feel. The feeling is usually either 'we're fine' or 'something's wrong' with nothing in between. There are no numbers, no early warning, just low-grade anxiety.",
+    "Numbers exist — revenue, maybe client count — but you only look at them when something already feels off. By the time you check, the problem has been building for weeks. There is no early warning, only late discovery.",
+    "You're reviewing metrics on a schedule now, but they're all backward-looking — you find out what happened last month, not what's forming this week. The measurement system exists but hasn't become an early warning system yet.",
+    "The Company Dashboard gives you a weekly health picture without chasing data. You see a problem forming in week two instead of discovering it in month three. The measurement system has become an early warning system.",
+    "The team tracks and reports their own numbers — you review, you don't gather. Needles Moved creates a culture where results are the norm and self-reporting is expected. Your job is to respond to data, not chase it.",
+    "You track two levels — operational metrics owned by the team weekly, and strategic metrics owned by you quarterly. You're watching direction, not daily dashboards. The business's health is visible without your constant attention.",
+    "You don't manage the measurement system — you receive its output. The business tells you how it's doing, and you use that to decide where it's going next. Measurement is about organizational legacy and long-horizon health.",
+  ],
+  Power: [
+    null,
+    "Every decision — big and small — runs through you by default. Not by design, by necessity. There is no one else to route decisions to, and no framework for what they'd decide even if there were.",
+    "The team executes tasks but all meaningful decisions still come to you. Nobody told them what they're empowered to decide — so they default to escalating everything. You created the dependence unintentionally.",
+    "You're distributing authority — the Decision Authority Matrix is being built — but old habits exist on both sides. The team still escalates things they could decide, and you still answer things you shouldn't.",
+    "The Decision Authority Matrix is communicated and in use. Most decisions happen without you — exceptions are the exception. Your team is making real decisions within defined domains.",
+    "Power is genuinely distributed. The team makes good decisions — not just compliant ones. The culture has shifted from escalation to ownership. Problems get solved before they reach you.",
+    "You hold power only at the strategic level. Operational power is entirely distributed. The meetings you attend are the ones that require your judgment. The ones that don't — don't have you in them.",
+    "Your decisions are few, unhurried, and high-leverage. You're deciding what happens in three years, not what happens today. Power is so fully distributed that your absence is the normal state of a business designed to operate without you.",
+  ],
+};
+
+// ─── P LEVEL BOTTLENECK + UNLOCK ─────────────────────────────────────────────
+const P_LEVEL_BOTTLENECK = {
+  Pipeline: [null, "All demand runs through your personal effort and relationships.", "More leads, but no system controlling where they come from.", "Marketing depends on your message and energy to work.", "Channels exist but aren't diversified enough to be resilient.", "The pipeline works, but your name still carries too much of the trust.", "Demand generation runs without you, but lacks measurement at scale.", "No critical bottleneck — the pipeline is durable."],
+  Profit: [null, "Pricing was set by instinct. You don't truly know your margins.", "Revenue grows but financial clarity doesn't keep pace.", "Numbers exist but aren't precise enough to drive bold decisions.", "Financial reports are strong but leaders don't manage from them.", "You still carry the real economic judgment yourself.", "Economics are clear — the question is strategic capital allocation.", "No critical bottleneck — the money system is trustworthy."],
+  Perspective: [null, "You see the business as an extension of your labor.", "You have help, but still see yourself as the real source of value.", "You trust execution to others, but still see yourself as the final filter.", "You see systems clearly, but still view yourself as indispensable.", "Your identity is still tied to being needed by the business.", "You're free but still feel the pull to stay close.", "No critical bottleneck — you see yourself clearly."],
+  Principles: [null, "Standards live only in your personal judgment — they aren't teachable yet.", "Values are spoken but remain broad and inconsistently applied.", "Principles exist but you still interpret what they mean in the moments that matter.", "Written principles exist but aren't embedded across leaders and complexity.", "You're still the personal guardian of the culture.", "The culture is strong but you feel safer staying near it.", "No critical bottleneck — the compass is durable."],
+  Program: [null, "Most repeated work still happens manually.", "The tech stack is shallow, scattered, and underused.", "You still shape most of the deeper logic behind the systems.", "Digital leverage exists but isn't leader-carried across growth.", "You're still the only one who spots leverage opportunities.", "The system layer is mature — the question is strategic scale.", "No critical bottleneck — technology serves the business well."],
+  People: [null, "You are mostly the team, with no real role design.", "People are added for relief rather than clear outcome ownership.", "You still own too many of the important outcomes yourself.", "You still architect too much of the team structure personally.", "You're still the strongest human in every key area.", "The team is strong, but you don't fully trust them at distance.", "No critical bottleneck — human capability is durable."],
+  Process: [null, "The process lives in memory and instinct, not documentation.", "SOPs exist but are partial and depend on verbal explanation.", "You still carry the improvement logic and exception handling.", "The operating layer is real but not embedded across all teams.", "You're the hidden guardian of operational consistency.", "Processes are strong, but you feel the need to stay near them.", "No critical bottleneck — work flows well without you."],
+  Progress: [null, "You judge performance by feel, not data.", "Some numbers are tracked, but visibility is partial and shallow.", "You carry too much of the meaning behind the numbers.", "Leaders have dashboards but don't consistently manage through them.", "You're the deepest keeper of performance truth.", "Visibility is clear, but you still check from a distance.", "No critical bottleneck — leaders think through performance without you."],
+  Power: [null, "All meaningful leverage — decisions, trust, approvals — lives in you.", "Some activity is shared, but you hold most meaningful leverage.", "Roles are stronger, but real leverage is still too concentrated in you.", "Authority is structured, but the deeper leverage is still founder-owned.", "You're the deepest holder of meaningful leverage.", "Leverage is more distributed, but you still stay near the power map.", "No critical bottleneck — authority is well-distributed."],
+};
+
+const P_LEVEL_UNLOCK = {
+  Pipeline: [null, "Build one repeatable channel that generates leads without your daily involvement.", "Identify your strongest source and build a repeatable process around it.", "Document the messaging so someone else can carry it.", "Add a second independent channel so no single source owns your pipeline.", "Shift the trust from your personal brand to the company brand.", "Build forecasting and demand planning across all channels.", "Maintain, measure, and continuously optimize."],
+  Profit: [null, "Calculate your real cost per delivery and set pricing from data, not instinct.", "Build a simple financial dashboard you review weekly.", "Set margin targets by service line and review them monthly.", "Make every leader own a financial number and report on it.", "Transfer the financial model to a leader who can manage it.", "Build a capital allocation framework with your leadership team.", "Maintain, measure, and continuously optimize."],
+  Perspective: [null, "Start treating the business as a system to build, not a job to do.", "Identify one area where someone else can own the outcome without you.", "Let go of being the quality checkpoint on every deliverable.", "Document your architectural thinking so others can carry it.", "The hardest work here is internal — separate your worth from the business.", "Build trust in the business's ability to thrive without your presence.", "Maintain clarity and lead from vision."],
+  Principles: [null, "Write down your top 5 non-negotiable standards.", "Turn each value into a specific behavioral standard with examples.", "Let leaders make principle-based decisions without checking with you.", "Pressure-test principles in edge cases with your leadership team.", "Transfer cultural authority to leaders who embody it.", "Step back and let the culture prove it holds without you.", "Maintain and refine as the business evolves."],
+  Program: [null, "List every task done more than twice a week and automate the first one.", "Consolidate tools and build one integrated system layer.", "Hand system ownership to someone who can improve it without you.", "Make system thinking a team responsibility, not your personal domain.", "Train leaders to identify and implement automation themselves.", "Evaluate technology as a strategic investment, not just operational tooling.", "Maintain and explore emerging leverage opportunities."],
+  People: [null, "Define the first seat that isn't yours and hire for it specifically.", "Give each person a clearly defined outcome they own — not just tasks.", "Transfer one major outcome to a capable team member this month.", "Let leaders build and manage their own teams.", "Hire or develop people who are genuinely better than you at their role.", "Test your trust by stepping back from one area for 30 days.", "Maintain talent development and succession planning."],
+  Process: [null, "Document your three most repeated workflows this week.", "Make each SOP complete enough that a new hire could follow it alone.", "Write down how you handle the top 10 exceptions.", "Standardize processes across teams so quality is consistent everywhere.", "Let leaders own process quality — and accept their approach may differ from yours.", "Trust the operating layer from a distance.", "Maintain and continuously improve."],
+  Progress: [null, "Pick 5 numbers that tell you if the business is healthy and track them weekly.", "Build a weekly scorecard that covers revenue, pipeline, and delivery.", "Teach your team what the numbers mean and why they matter.", "Make the weekly scorecard review a non-negotiable leadership ritual.", "Let leaders own performance interpretation — trust their read on the data.", "Trust the visibility system fully and review only at strategic intervals.", "Maintain and refine the visibility system."],
+  Power: [null, "Identify the three decisions you make most often and delegate one.", "Create a decision authority matrix: what they can decide without you.", "Give a leader full authority over one domain — and let them use it.", "Map every decision type and assign clear ownership to the right person.", "Transfer risk-bearing authority to leaders and resist pulling it back.", "Trust the distribution and step back from operational authority.", "Maintain and refine the decision-making structure."],
+};
+
+// ─── SOLUTION LONG — "The ONE Thing" actionable playbook per P per level ────
+const SOLUTION_LONG = {
+  Pipeline: {
+    1: "The ONE Thing at Level 1 is building one intentional referral ask — a specific, repeatable request the founder makes to their best clients at a defined moment in the relationship. Not a marketing plan. Not a CRM. One ask, practiced and tracked. When this happens, the founder discovers something that changes everything: new business can be requested, not just hoped for.",
+    2: "The ONE Thing at Level 2 is choosing one lead source to build deliberately — not hoping existing word of mouth continues, but identifying the channel that best matches how clients find and trust this business, and investing in it intentionally. The experience of deliberately building one source — even at modest scale — changes what the founder believes is possible.",
+    3: "The ONE Thing at Level 3 is systematizing the close — writing the two or three objections that appear in nearly every deal, scripting honest language to handle each one, and training that language to whoever sits with prospects first. The first deal that closes without the founder in the room changes everything: it proves the close was not about personality, it was about process.",
+    4: "The ONE Thing at Level 4 is stress-testing the front end — deliberately removing founder involvement from the conversion process for a defined period and observing where it holds and where it breaks. The breaks reveal the exact dependencies that create fragility. Fixing those dependencies one by one creates a front end that holds without any specific person's attention.",
+    5: "The ONE Thing at Level 5 is transferring the close to the team — building the full conversion system, training the team to run it, then stepping back from the close entirely for a defined test period. The founder's calendar stops being the ceiling on deal volume. For the first time, the pipeline can operate at full capacity without being gated by one person's availability.",
+    6: "The ONE Thing at Level 6 is assigning pipeline calibration to one named owner — a person whose job includes monitoring performance indicators, identifying when something is off, and making the adjustment. The pipeline no longer needs the founder to watch it, notice problems, or intervene. It has its own nervous system.",
+    7: "The ONE Thing at Level 7 is setting the channel allocation deliberately — choosing which channels to invest in, at what level, toward what strategic objective, for the next twelve months. Demand stops being a product of momentum and becomes a product of strategy.",
+  },
+  Profit: {
+    1: "The ONE Thing at Level 1 is calculating the true cost of the most-sold service — not estimated, not assumed, but actually calculated: loaded labor hours, materials, overhead allocation, and the time that never appears on invoices. When this number is known for the first time, the founder has a floor. Pricing above it is a choice. Pricing below it is invisible subsidization.",
+    2: "The ONE Thing at Level 2 is running a job-level margin report — pulling every engagement from the last quarter, what it billed, what it actually cost in real labor and overhead, and what it returned. Almost always, two or three categories are generating most of the real return and at least one is generating almost none. That clarity is the domino.",
+    3: "The ONE Thing at Level 3 is naming the most profitable offer — identifying by margin data which specific service, client type, or delivery structure returns the most per unit of effort. They can price future work against what the best work returns, shift capacity away from margin-thin categories, and build the sales conversation around the offer that actually sustains the business.",
+    4: "The ONE Thing at Level 4 is building the 13-week cash model — a forward projection of inflows and outflows based on current contracts, historical payment timing, and known obligations. Every cash crunch they would have been surprised by now shows up as a solvable problem three weeks early. One model, maintained weekly, eliminates the entire category of financial surprises.",
+    5: "The ONE Thing at Level 5 is connecting each financial report to a specific decision trigger. Not just reviewing the margin report — but defining: if margin drops below X, this action fires. If cash forecast shows Y, this decision is made. The data no longer needs to be interpreted — it produces actions according to pre-defined criteria.",
+    6: "The ONE Thing at Level 6 is writing the capital allocation policy — a document that defines, in advance, how excess capital is deployed: a defined percentage to reserves, a defined percentage to growth reinvestment, a defined percentage to distribution. Capital without a deployment framework is not safety — it is delayed compounding.",
+    7: "The ONE Thing at Level 7 is writing the capital deployment strategy — a forward-looking document that answers specifically: where does capital go over the next 18 months, toward what strategic objective, at what investment level? Capital stops accumulating passively and starts working intentionally.",
+  },
+  Perspective: {
+    1: "The ONE Thing at Level 1 is writing the standard — getting it out of the founder's head and onto paper. The five to eight specific, observable things that would tell any reasonable person whether a given piece of work meets the standard or not. You cannot trust what you have not defined. Define it first.",
+    2: "The ONE Thing at Level 2 is letting one outcome land without reviewing it — choosing one category of work, designating it as fully owned by the team, and not looking at the output before it reaches the client. That experience is the proof of concept for trust. Not philosophical trust — demonstrated trust, built from the specific experience of letting go and finding out the team handled it.",
+    3: "The ONE Thing at Level 3 is removing yourself from one specific review category permanently and communicating the removal clearly to the team. Not 'I don't need to see this every time' — but 'this category is yours; I am not in the loop on it.' The team stops calibrating to founder approval and starts calibrating to the standard.",
+    4: "The ONE Thing at Level 4 is transferring system design authority to the team — explicitly giving the people who run each domain the authority to design, modify, and own the systems in that domain without requiring founder approval. The founder's role shifts from system designer to system evaluator.",
+    5: "The ONE Thing at Level 5 is defining your new value proposition — not to the market, but to yourself. What do you contribute that no one else in this organization can? For most founders at this level, the genuine answer involves vision, relationships, and the development of the leaders around them.",
+    6: "The ONE Thing at Level 6 is naming the next thing you are building. Not vaguely — specifically enough to describe to someone else in three sentences. A new category. A portfolio. A teaching platform. A second business. One named next direction turns optionality from comfortable ambiguity into actual forward momentum.",
+    7: "The ONE Thing at Level 7 is the decision itself — choosing one direction for the next chapter and committing to it. Not studying options indefinitely. Not staying open to whatever emerges. Choosing. One committed direction, stated clearly, is the one thing that turns Level 7 from an impressive achievement into the beginning of something new.",
+  },
+  Principles: {
+    1: "The ONE Thing at Level 1 is naming one standard in specific, testable language — not 'we do great work' but the four or five observable things that would tell any reasonable person whether a specific output meets the standard or not. That single naming is the first domino in building a culture that does not require the founder's constant presence to maintain its quality.",
+    2: "The ONE Thing at Level 2 is writing what 'right' looks like for one category of recurring decisions — not values language, but practical decision guidance specific enough to act on without asking. The first time a team member makes a good call using the written standard rather than asking the founder, something changes in both directions.",
+    3: "The ONE Thing at Level 3 is putting the principles somewhere the team consults before making a decision — not after, not in retrospect, but in the moment of ambiguity. When the team starts consulting the principles before escalating to the founder, the founder's involvement in gray-area decisions begins to drop.",
+    4: "The ONE Thing at Level 4 is embedding one principle into one concrete hiring or performance criterion — a specific, evaluable criterion tied to a specific principle. Principles that affect personnel decisions are real. Principles that do not are aspirational.",
+    5: "The ONE Thing at Level 5 is building a culture onboarding — a designed experience that transmits the principles to every new hire through a structured process. When this transmission system exists, the culture becomes portable: it travels to new team members through the process rather than through the founder's personal reach.",
+    6: "The ONE Thing at Level 6 is stating the principles externally — making visible to the outside world what the organization actually stands for, in language that means something to the people you most want to work with or hire. The principles begin working as a pre-filter: attracting aligned clients and talent before any conversation happens.",
+    7: "The ONE Thing at Level 7 is building one governance structure that carries the culture without the founder — a decision framework, a governance criterion, or a succession standard that embeds the principles into the institutional structure. One structural embedding converts a founder-dependent culture into an institution.",
+  },
+  Program: {
+    1: "The ONE Thing at Level 1 is automating the single most repeated task in the business — the thing that happens most often and is currently done entirely manually. One connection between two tools. One template that eliminates manual formatting. One trigger that fires a task automatically. That experience changes what the founder believes about where their time goes and what is possible.",
+    2: "The ONE Thing at Level 2 is connecting the two most-used tools — creating a data flow between the systems the team uses most so that information entered in one appears automatically in the other. The question shifts from 'how do I manage this' to 'how do I connect this.'",
+    3: "The ONE Thing at Level 3 is designating one person as owner of the technology stack — giving them explicit responsibility for evaluating the current tools, maintaining the integrations, removing what does not serve, and adding what is needed. The rest of the team stops having to think about the tools because one person is thinking about them on everyone's behalf.",
+    4: "The ONE Thing at Level 4 is integrating the core systems — building the central data flow that connects the business's primary tools so that information moves automatically between them. Reports assemble themselves. Status is visible without checking multiple places. The hours previously spent on manual synchronization become available for higher-leverage work.",
+    5: "The ONE Thing at Level 5 is building one proprietary automation — a custom workflow, delivery capability, or client-facing system designed specifically around how this business operates. Proprietary process encoded in technology is a form of competitive protection that a competitor using standard tools cannot easily replicate.",
+    6: "The ONE Thing at Level 6 is writing a technology roadmap — a twelve-month plan for what the technology layer needs to build, upgrade, and integrate to support the business's strategic priorities. Technology stops being reactive and starts being anticipatory.",
+    7: "The ONE Thing at Level 7 is identifying and building the technology moat — the specific system, data asset, or delivery capability that would be genuinely difficult for a well-resourced competitor to replicate. The technology layer stops being infrastructure and becomes defensibility.",
+  },
+  People: {
+    1: "The ONE Thing at Level 1 is defining the highest-leverage hire — not the most annoying tasks to offload, but the specific category of work that, if removed from the founder's plate, would most directly unlock the founder's ability to grow the business. One clear seat definition is the domino that determines whether the business gets a leverage hire or a convenience hire.",
+    2: "The ONE Thing at Level 2 is repositioning the first hire against the actual growth bottleneck rather than the most convenient gap to fill. What category of work, if removed from your schedule, would most change what you can build? Position the hire there. That is the leverage hire. It pays back differently than a support hire.",
+    3: "The ONE Thing at Level 3 is giving the team authority over one complete outcome — not 'help with' but 'owns, start to finish, and the result is theirs.' One fully transferred outcome — produced, delivered, and not adjusted by the founder afterward — converts a team trained to ask into a team trained to own.",
+    4: "The ONE Thing at Level 4 is defining and filling one leadership seat — a role with real decision rights, real accountability for a domain, and real consequences for outcomes. Not a title promotion. A seat with authority. One real leadership seat changes what the rest of the team believes is possible.",
+    5: "The ONE Thing at Level 5 is transferring complete decision rights to each leader's domain — not informally but explicitly. Not 'use your judgment' but 'this category of decisions is yours, here are the criteria, here is how it gets reviewed.' The difference in speed, morale, and decision quality between a leadership team with real authority and one that manages up is profound.",
+    6: "The ONE Thing at Level 6 is designing the internal leadership development track — a defined sequence of increasing responsibilities, decision rights, and performance standards. When this track exists, high performers can see a path forward inside the organization. Leadership capacity grows through compounding internal investment.",
+    7: "The ONE Thing at Level 7 is writing the succession plan for the top three roles. Not because succession is imminent — because the act of writing it reveals exactly where the organization is fragile. That map of fragility tells the organization where to invest in institutional resilience.",
+  },
+  Process: {
+    1: "The ONE Thing at Level 1 is writing the steps of the core service from start to finish — every step, in the order it happens, with enough specificity that someone who had not done it before would know what to do next. The work that felt like judgment and intuition is, in fact, a repeatable sequence that can be described. You cannot improve, delegate, or automate what has never been written down.",
+    2: "The ONE Thing at Level 2 is building one delivery checklist for the most common type of engagement — every step in sequence, with enough specificity that a team member could follow it and produce an acceptable outcome on a first attempt. That proof of concept — that a checklist can produce consistent delivery — makes building checklists for other engagement types feel worth the investment.",
+    3: "The ONE Thing at Level 3 is moving the process into the tool where the work actually happens. The steps become tasks. The tasks appear automatically when an engagement begins. The team cannot skip step four without marking step three complete. One process moved from document to tool demonstrates the difference between process as aspiration and process as operational reality.",
+    4: "The ONE Thing at Level 4 is auditing the documented process against actual practice — walking through the current documentation step by step, comparing it to how the work actually happens today, and updating every gap. Accurate documentation is a different tool than inaccurate documentation — and the first requires the audit.",
+    5: "The ONE Thing at Level 5 is installing a process update loop — a regular cadence where the team's operational learning is formally captured and incorporated into the documented process. The playbook improves at the rate the team learns rather than only when something breaks.",
+    6: "The ONE Thing at Level 6 is running one structured process innovation session — a dedicated block of time where the team asks: what would a fundamentally better version of this look like? Not what can be improved incrementally, but what could be redesigned. One innovation session that produces one genuinely better design demonstrates the difference between process maintenance and process leadership.",
+    7: "The ONE Thing at Level 7 is identifying what in the playbook is genuinely proprietary — the specific methods, sequences, or frameworks that produce outcomes a competitor could not easily replicate. One identified proprietary process element turns process maturity from operational infrastructure into competitive protection.",
+  },
+  Progress: {
+    1: "The ONE Thing at Level 1 is picking three numbers and tracking them every week without exception — a pipeline number, a delivery number, and a financial number. The experience of having a number to look at — and noticing that the number is more reliable than the feeling — is the domino that makes building a real measurement system feel worth the effort.",
+    2: "The ONE Thing at Level 2 is connecting one metric to one specific decision — defining in advance: if this number moves below this threshold, this is what happens. That experience — data causing a decision rather than just informing a reflection — makes building more measurement-to-decision links feel necessary rather than optional.",
+    3: "The ONE Thing at Level 3 is designating three metrics as the ones the business runs from — declaring, explicitly, that these are the primary numbers and that everything else is context. A dashboard with twenty interesting metrics produces analysis that rarely reaches a decision. One hierarchy decision makes the measurement system usable rather than merely comprehensive.",
+    4: "The ONE Thing at Level 4 is making the dashboard the first thing reviewed in every team meeting — not a status update, not an agenda item, the actual numbers, reviewed together, before any other conversation. The meeting format is the carrier of the management culture. Change what comes first and you change what the organization believes is primary.",
+    5: "The ONE Thing at Level 5 is defining the decision each metric triggers when it moves. Not 'this number going down is bad' — but 'when this number drops below X, this specific action fires.' The data no longer needs to be interpreted — it produces actions according to pre-defined criteria.",
+    6: "The ONE Thing at Level 6 is adding one leading indicator to every key metric. Pipeline created this week predicts revenue next month. Team satisfaction scores predict retention next quarter. Leading indicators convert a reactive measurement system into a proactive management tool.",
+    7: "The ONE Thing at Level 7 is adding external benchmarks to the measurement system — what does top-quartile performance look like in this category and market? Internal excellence measured against external context produces better strategic decisions than internal excellence measured in isolation.",
+  },
+  Power: {
+    1: "The ONE Thing at Level 1 is publishing a list of decisions the team can make without asking — specific, clear, and visible to everyone. Not a vague statement about empowerment. A literal list: if the situation is X, you decide. The first time a team member makes a decision using the list — and the founder accepts the outcome — the organization's decision velocity increases.",
+    2: "The ONE Thing at Level 2 is writing the decision boundary — a clear, specific document that defines what the team can decide, what requires the founder, and what happens at the edge cases. Known boundaries are expansive: teams operate confidently within them. Guessed boundaries are contractive.",
+    3: "The ONE Thing at Level 3 is making one authority transfer formal and irreversible — choosing one category of decisions, transferring it to a named person, and committing to not taking it back even when outcomes are imperfect. Permanent transfer teaches different behavior than provisional transfer. One irreversible transfer makes the team believe authority can be real.",
+    4: "The ONE Thing at Level 4 is stopping the acceptance of escalations in one specific decision category — formally telling the team that the founder will not take those decisions back. The team builds the decision muscle that was impossible to build as long as the founder was available as the decision backup.",
+    5: "The ONE Thing at Level 5 is formally transferring the largest remaining decision category from the founder to the relevant leader — with complete authority, documented criteria, and no escalation path back. The last significant operational dependency on the founder is removed.",
+    6: "The ONE Thing at Level 6 is defining where the founder's leverage creates the highest return — specifically identifying the activities where the founder's involvement produces meaningfully better outcomes than anyone else's. The founder stops filling available time with whatever flows naturally and starts filling it with the highest-value work available.",
+    7: "The ONE Thing at Level 7 is protecting dedicated time for the decisions only the founder should make — the specific categories of strategic decision where the founder's judgment, relationships, or context creates irreplaceable value. Not the most urgent decisions. The most important ones.",
+  },
+};
+
+// ─── RESOURCE MAPPING ───────────────────────────────────────────────────────
+const P_RESOURCES = {
+  Pipeline: { title: "Pipeline Playbook", desc: "Build a system that generates leads without your daily involvement.", cta: "Access the Pipeline Playbook →" },
+  Profit: { title: "Profit Clarity System", desc: "Understand your real margins and price with confidence.", cta: "Access the Profit System →" },
+  Perspective: { title: "The Perspective Shift", desc: "See the business as a system, not an extension of yourself.", cta: "Start the Perspective Shift →" },
+  Principles: { title: "Principles Architecture", desc: "Turn your standards into a compass the team can follow without you.", cta: "Build Your Principles →" },
+  Program: { title: "Automation Playbook", desc: "Eliminate manual work and build digital leverage.", cta: "Access the Program Playbook →" },
+  People: { title: "Team Architecture", desc: "Build roles, seats, and ownership — not just headcount.", cta: "Access the People Playbook →" },
+  Process: { title: "Process Documentation System", desc: "Document the work so it runs without your memory.", cta: "Access the Process System →" },
+  Progress: { title: "Scorecard Builder", desc: "Build the 5-7 numbers that tell you everything.", cta: "Build Your Scorecard →" },
+  Power: { title: "Authority Map", desc: "Distribute decisions to the right people at the right level.", cta: "Build Your Authority Map →" },
+};
+
+// ─── IN-DEPTH SCORING ────────────────────────────────────────────────────────
+const RANGE_MIDPOINTS = { "1-2": 1.5, "3": 3, "4-5": 4.5, "6-7": 6.5 };
+const RANGE_ORDER = ["1-2", "3", "4-5", "6-7"];
+
+function calculateDeepResult(deepAnswers) {
+  const pLevels = {};
+  for (let i = 0; i < 9; i++) {
+    const ladderRange = deepAnswers[i * 2];
+    const realityRange = deepAnswers[i * 2 + 1];
+    const ladderScore = RANGE_MIDPOINTS[ladderRange];
+    const realityScore = RANGE_MIDPOINTS[realityRange];
+
+    const ladderPos = RANGE_ORDER.indexOf(ladderRange);
+    const realityPos = RANGE_ORDER.indexOf(realityRange);
+
+    let finalScore;
+    if (Math.abs(ladderPos - realityPos) >= 2) {
+      finalScore = Math.min(ladderScore, realityScore);
+    } else {
+      finalScore = (ladderScore + realityScore) / 2;
+    }
+
+    pLevels[P_NAMES[i]] = Math.max(1, Math.min(7, Math.round(finalScore)));
+  }
+
+  const entries = Object.entries(pLevels);
+  const sorted = [...entries].sort((a, b) => a[1] - b[1]);
+  // Overall level = average across all P's, rounded up
+  const avg = entries.reduce((sum, e) => sum + e[1], 0) / entries.length;
+  const overallLevel = Math.min(7, Math.ceil(avg));
+  const primaryConstraint = sorted[0][0];
+  const superpower = sorted[sorted.length - 1][0];
+
+  return { pLevels, overallLevel, primaryConstraint, superpower };
+}
+
+// ─── RESULTS ──────────────────────────────────────────────────────────────────
+const results = {
+  1: {
+    label: "Level 1 — The Grinder",
+    headline: "You built something real.",
+    body: "Most people talk about starting a business. You actually did it. You took the risk, you did the work, and you created something from nothing with your own effort. That takes a kind of courage and grit that can't be taught.\n\nThe shift ahead is not about working harder. It's about building the first system that works when you're not touching it. That one change will unlock everything that comes next.",
+    next: "Build the first system that works when you're not touching it.",
+    cta: "Start Building →",
+  },
+  2: {
+    label: "Level 2 — The Builder",
+    headline: "You took the leap from solo to team — and that changes everything.",
+    body: "You've done what stops most business owners cold: you hired people and started handing things off. That decision alone puts you ahead of the majority of business owners who never get past doing everything themselves.\n\nThe shift ahead is clear: take what lives in your head — the way you do things, the standards you hold, the judgment calls you make — and put it into documentation your team can follow. That's the unlock.",
+    next: "Take what lives in your head and put it into documentation your team can follow.",
+    cta: "Start Documenting →",
+  },
+  3: {
+    label: "Level 3 — The Multiplier",
+    headline: "You've built a team that can execute. That's a real achievement.",
+    body: "Your business is no longer just you. You have capable people, real processes are taking shape, and the day-to-day work gets done. You've successfully moved past the stage where everything depends on your personal output — and that puts you further ahead than most business owners ever get.\n\nThe work ahead isn't finding better people — it's building the decision framework that lets your current people make good calls without checking with you first.",
+    next: "Build the decision framework that lets your people make good calls without you.",
+    cta: "Book a Business Assessment →",
+  },
+  4: {
+    label: "Level 4 — The Systems Builder",
+    headline: "You've built real infrastructure. Most businesses never get here.",
+    body: "Your business has documentation, defined roles, decision authority, and people who own outcomes. A new hire can get up to speed from your systems in days, not months of your personal time. You've built something that a lot of companies ten times your size have never figured out.\n\nThe unlock at this stage is measurement — the ability to see clearly what's happening inside the systems you've already built. Once you can see the business clearly, you can lead it from a completely different altitude.",
+    next: "Build a weekly rhythm that gives you the health of the business at a glance.",
+    cta: "Book a Business Assessment →",
+  },
+  5: {
+    label: "Level 5 — The Coach",
+    headline: "You've built something that runs. Now you're becoming the leader it needs.",
+    body: "Your systems work. Your team executes. The operating rhythm is real. You've achieved what most business owners only dream about: a business that can function without you managing every detail. That didn't happen by accident — it happened because you built it deliberately.\n\nYou're at the threshold. Everything you've built has prepared you for this.",
+    next: "This transition requires someone in the room with you — not a course.",
+    cta: "Book a Business Assessment →",
+  },
+  6: {
+    label: "Level 6 — The Strategist",
+    headline: "You've built a business that runs without you. Very few owners ever reach this.",
+    body: "Your team has real leaders. Your systems are self-sustaining. Decisions happen without you, and they happen well. You've built something most entrepreneurs spend their entire career trying to achieve — a business that doesn't need your daily presence to operate at a high level.\n\nThe business doesn't need your closeness. It needs your vision. The shift ahead is stepping fully into the role only you can play: the person who decides where this business goes in the next three to five years.",
+    next: "Strategic work at this level is highly specific to your business.",
+    cta: "Book a Business Assessment →",
+  },
+  7: {
+    label: "Level 7 — The Autonomous Leader",
+    headline: "You built something that outlasts your involvement. That's the rarest achievement in business.",
+    body: "This is the destination. Your business generates revenue, delivers results, maintains standards, and improves itself — whether you're in the building or on the other side of the world. The team is self-managing. The culture is self-sustaining. Your people are better than you at their specific jobs, and that's not a threat — it's exactly what you designed.\n\nWhat you've built has real, transferable value. Not because of what you do every day — but because of what you built that works every day without you.",
+    next: "You found the path. The question now is what you're building toward.",
+    cta: "Join the Mastermind →",
+  },
+};
+
+// ─── QUICK QUESTION → P MAPPING ──────────────────────────────────────────────
+// Maps each quick question index to the 9P it most directly measures
+const QUICK_P_MAP = [
+  "Pipeline",     // Q1: predictable client acquisition
+  "Perspective",  // Q2: brand vs personal reputation
+  "Process",      // Q3: documented training systems
+  "Program",      // Q4: automation and systemization
+  "People",       // Q5: team ownership and handoff quality
+  "Progress",     // Q6: weekly metrics and scorecard
+  "Progress",     // Q7: pipeline and risk visibility
+  "Power",        // Q8: decision authority delegation
+  "Principles",   // Q9: team decision-making standards
+  "People",       // Q10: team independence without founder
+  "Perspective",  // Q11: working on vs in the business
+  "Power",        // Q12: 30-day absence test
+];
+
+// ─── SCORING ──────────────────────────────────────────────────────────────────
+function calculateResult(answersArr) {
+  let totalPoints = 0;
+  answersArr.forEach(a => {
+    if (a === "yes") totalPoints += 2;
+    else if (a === "inProgress") totalPoints += 1;
+  });
+
+  let level;
+  if (totalPoints <= 3) level = 1;
+  else if (totalPoints <= 6) level = 2;
+  else if (totalPoints <= 10) level = 3;
+  else if (totalPoints <= 14) level = 4;
+  else if (totalPoints <= 18) level = 5;
+  else if (totalPoints <= 22) level = 6;
+  else level = 7;
+
+  const categoryScores = CATEGORIES.map(cat => ({
+    ...cat,
+    answers: cat.indices.map(i => answersArr[i]),
+    points: cat.indices.reduce((sum, i) => {
+      if (answersArr[i] === "yes") return sum + 2;
+      if (answersArr[i] === "inProgress") return sum + 1;
+      return sum;
+    }, 0),
+    maxPoints: cat.indices.length * 2,
+  }));
+
+  // Derive approximate P-level signals from quick answers
+  const pSignalScores = {};
+  answersArr.forEach((a, i) => {
+    const pName = QUICK_P_MAP[i];
+    if (!pSignalScores[pName]) pSignalScores[pName] = { points: 0, max: 0 };
+    pSignalScores[pName].max += 2;
+    if (a === "yes") pSignalScores[pName].points += 2;
+    else if (a === "inProgress") pSignalScores[pName].points += 1;
+  });
+
+  // Convert raw scores to signal labels: Strong / Growing / Developing
+  const pSignals = {};
+  Object.entries(pSignalScores).forEach(([pName, { points, max }]) => {
+    const pct = points / max;
+    if (pct >= 0.75) pSignals[pName] = "Strong";
+    else if (pct >= 0.4) pSignals[pName] = "Growing";
+    else pSignals[pName] = "Developing";
+  });
+
+  // P's not directly measured by quick assessment
+  P_NAMES.forEach(p => {
+    if (!pSignals[p]) pSignals[p] = null;
+  });
+
+  return { level, totalPoints, categoryScores, pSignals };
+}
+
+// ─── CATEGORY BREAKDOWN ───────────────────────────────────────────────────────
+function CategoryBreakdown({ categoryScores }) {
+  return (
+    <div style={{ marginBottom: "3rem" }}>
+      <div style={{
+        fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem",
+        color: BRAND.gray, letterSpacing: "0.2em", textTransform: "uppercase",
+        marginBottom: "1.5rem"
+      }}>
+        YOUR DIAGNOSTIC PROFILE
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+        {categoryScores.map((cat, i) => {
+          const allPass = cat.points === cat.maxPoints;
+          const nonePass = cat.points === 0;
+          return (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+              <div style={{
+                fontFamily: "'DM Sans', sans-serif", fontSize: "0.9rem",
+                color: allPass ? BRAND.offWhite : BRAND.gray,
+                minWidth: "160px", fontWeight: allPass ? 400 : 300
+              }}>
+                {cat.shortName}
+              </div>
+              <div style={{ display: "flex", gap: "6px" }}>
+                {cat.answers.map((ans, j) => (
+                  <div key={j} style={{
+                    width: 12, height: 12, borderRadius: "50%",
+                    background: ans === "yes" ? BRAND.teal : ans === "inProgress" ? "rgba(8,126,139,0.35)" : "rgba(138,155,176,0.2)",
+                    border: ans === "yes" ? "none" : ans === "inProgress" ? "1px solid rgba(8,126,139,0.5)" : "1px solid rgba(138,155,176,0.3)",
+                  }} />
+                ))}
+              </div>
+              <div style={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem",
+                letterSpacing: "0.15em", textTransform: "uppercase",
+                color: allPass ? BRAND.paleTeal : nonePass ? BRAND.accent : BRAND.gray,
+              }}>
+                {allPass ? "CLEAR" : nonePass ? "PRIMARY GAP" : "PARTIAL"}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── BRANDMARK CHART ─────────────────────────────────────────────────────────
+const BLADE_COLORS = [
+  "#094e5a", "#0b6070", "#0d7585", "#0f8b9c", "#11a3b6", "#13bcd1", "#16d4e8"
+];
+const DIMMED = "rgba(22, 212, 232, 0.06)";
+const DIMMED_STROKE = "rgba(22, 212, 232, 0.12)";
+
+const BLADE_PATHS = [
+  [ // Blade 0 — Pipeline (top / 0°)
+    "M49.4973,43.0682 A6.95,6.95 0 0 1 50.5027,43.0682 L51.0926,38.7888 A11.2643,11.2643 0 0 0 48.9074,38.7888 Z",
+    "M48.7576,37.8993 A12.1643,12.1643 0 0 1 51.2424,37.8993 L52.0883,33.6543 A16.4786,16.4786 0 0 0 47.9117,33.6543 Z",
+    "M47.7086,32.7731 A17.3786,17.3786 0 0 1 52.2914,32.7731 L53.3916,28.5739 A21.6929,21.6929 0 0 0 46.6084,28.5739 Z",
+    "M46.3525,27.7035 A22.5929,22.5929 0 0 1 53.6475,27.7035 L55.0,23.5615 A26.9071,26.9071 0 0 0 45.0,23.5615 Z",
+    "M44.6917,22.7042 A27.8071,27.8071 0 0 1 55.3083,22.7042 L56.9105,18.6307 A32.1214,32.1214 0 0 0 43.0895,18.6307 Z",
+    "M42.7295,17.7889 A33.0214,33.0214 0 0 1 57.2705,17.7889 L59.1194,13.7951 A37.3357,37.3357 0 0 0 40.8806,13.7951 Z",
+    "M40.4694,12.9711 A38.2357,38.2357 0 0 1 59.5306,12.9711 L61.6227,9.0682 A42.55,42.55 0 0 0 38.3773,9.0682 Z",
+  ],
+  [ // Blade 1 — Profit (40°)
+    "M54.0706,44.3668 A6.95,6.95 0 0 1 54.8408,45.0131 L58.0434,42.1141 A11.2643,11.2643 0 0 0 56.3694,40.7094 Z",
+    "M56.8264,39.9317 A12.1643,12.1643 0 0 1 58.7299,41.529 L62.1066,38.8208 A16.4786,16.4786 0 0 0 58.9071,36.1361 Z",
+    "M59.3179,35.3306 A17.3786,17.3786 0 0 1 62.8285,38.2763 L66.3705,35.7668 A21.6929,21.6929 0 0 0 61.1743,31.4066 Z",
+    "M61.5377,30.5753 A22.5929,22.5929 0 0 1 67.1261,35.2645 L70.8246,32.9609 A26.9071,26.9071 0 0 0 63.1641,26.533 Z",
+    "M63.479,25.6781 A27.8071,27.8071 0 0 1 71.6118,32.5023 L75.4575,30.4117 A32.1214,32.1214 0 0 0 64.8701,21.5278 Z",
+    "M65.1353,20.6515 A33.0214,33.0214 0 0 1 76.2744,29.9983 L80.2579,28.1273 A37.3357,37.3357 0 0 0 66.2862,16.4036 Z",
+    "M66.5008,15.5081 A38.2357,38.2357 0 0 1 81.1026,27.7604 L85.214,26.1153 A42.55,42.55 0 0 0 67.407,11.1735 Z",
+  ],
+  [ // Blade 2 — Perspective (80°)
+    "M56.7392,48.3012 A6.95,6.95 0 0 1 56.9138,49.2914 L61.2306,49.1292 A11.2643,11.2643 0 0 0 60.8511,46.9772 Z",
+    "M61.7011,46.6752 A12.1643,12.1643 0 0 1 62.1326,49.1223 L66.46,49.2182 A16.4786,16.4786 0 0 0 65.7348,45.105 Z",
+    "M66.5672,44.752 A17.3786,17.3786 0 0 1 67.363,49.2651 L71.6895,49.6195 A21.6929,21.6929 0 0 0 70.5116,42.9393 Z",
+    "M71.3244,42.5362 A22.5929,22.5929 0 0 1 72.5911,49.7204 L76.9051,50.333 A26.9071,26.9071 0 0 0 75.1686,40.485 Z",
+    "M75.9593,40.0325 A27.8071,27.8071 0 0 1 77.8029,50.4878 L82.0927,51.3583 A32.1214,32.1214 0 0 0 79.6927,37.7473 Z",
+    "M80.4592,37.2465 A33.0214,33.0214 0 0 1 82.9842,51.5667 L87.2384,52.694 A37.3357,37.3357 0 0 0 84.0713,34.7322 Z",
+    "M84.8114,34.1842 A38.2357,38.2357 0 0 1 88.1213,52.9558 L92.3283,54.3384 A42.55,42.55 0 0 0 88.2917,31.4461 Z",
+  ],
+  [ // Blade 3 — Principles (120°)
+    "M56.2545,53.0305 A6.95,6.95 0 0 1 55.7518,53.9013 L59.1628,56.5518 A11.2643,11.2643 0 0 0 60.2555,54.6594 Z",
+    "M61.1007,54.9744 A12.1643,12.1643 0 0 1 59.8583,57.1263 L63.1116,59.9814 A16.4786,16.4786 0 0 0 65.2,56.3643 Z",
+    "M66.0646,56.629 A17.3786,17.3786 0 0 1 63.7732,60.5978 L66.8597,63.6503 A21.6929,21.6929 0 0 0 70.2513,57.7758 Z",
+    "M71.1331,57.9894 A22.5929,22.5929 0 0 1 67.4856,64.3071 L70.3964,67.5494 A26.9071,26.9071 0 0 0 75.3964,58.8891 Z",
+    "M76.293,59.0508 A27.8071,27.8071 0 0 1 70.9847,68.245 L73.7114,71.6693 A32.1214,32.1214 0 0 0 80.6218,59.7 Z",
+    "M81.5309,59.8091 A33.0214,33.0214 0 0 1 74.2604,72.402 L76.7946,76.0001 A37.3357,37.3357 0 0 0 85.914,60.2048 Z",
+    "M86.8332,60.2607 A38.2357,38.2357 0 0 1 77.3027,76.7682 L79.6366,80.5315 A42.55,42.55 0 0 0 91.2594,60.4003 Z",
+  ],
+  [ // Blade 4 — Program (160°)
+    "M52.8432,56.3418 A6.95,6.95 0 0 1 51.8984,56.6857 L52.8077,60.9087 A11.2643,11.2643 0 0 0 54.8612,60.1614 Z",
+    "M55.3062,60.946 A12.1643,12.1643 0 0 1 52.9712,61.7958 L53.6282,66.0742 A16.4786,16.4786 0 0 0 57.5529,64.6457 Z",
+    "M58.0451,65.4043 A17.3786,17.3786 0 0 1 53.7387,66.9716 L54.1411,71.2939 A21.6929,21.6929 0 0 0 60.5152,68.9739 Z",
+    "M61.0534,69.7043 A22.5929,22.5929 0 0 1 54.1983,72.1994 L54.344,76.5542 A26.9071,26.9071 0 0 0 63.741,73.134 Z",
+    "M64.3239,73.8341 A27.8071,27.8071 0 0 1 54.3476,77.4652 L54.2352,81.841 A32.1214,32.1214 0 0 0 67.2226,77.114 Z",
+    "M67.8489,77.7819 A33.0214,33.0214 0 0 1 54.1848,82.7552 L53.8134,87.1405 A37.3357,37.3357 0 0 0 70.9522,80.9024 Z",
+    "M71.6204,81.5361 A38.2357,38.2357 0 0 1 53.7088,88.0554 L53.0777,92.4385 A42.55,42.55 0 0 0 74.9213,84.4881 Z",
+  ],
+  [ // Blade 5 — People (200°)
+    "M48.1016,56.6857 A6.95,6.95 0 0 1 47.1568,56.3418 L45.1388,60.1614 A11.2643,11.2643 0 0 0 47.1923,60.9087 Z",
+    "M47.0288,61.7958 A12.1643,12.1643 0 0 1 44.6938,60.946 L42.4471,64.6457 A16.4786,16.4786 0 0 0 46.3718,66.0742 Z",
+    "M46.2613,66.9716 A17.3786,17.3786 0 0 1 41.9549,65.4043 L39.4848,68.9739 A21.6929,21.6929 0 0 0 45.8589,71.2939 Z",
+    "M45.8017,72.1994 A22.5929,22.5929 0 0 1 38.9466,69.7043 L36.259,73.134 A26.9071,26.9071 0 0 0 45.656,76.5542 Z",
+    "M45.6524,77.4652 A27.8071,27.8071 0 0 1 35.6761,73.8341 L32.7774,77.114 A32.1214,32.1214 0 0 0 45.7648,81.841 Z",
+    "M45.8152,82.7552 A33.0214,33.0214 0 0 1 32.1511,77.7819 L29.0478,80.9024 A37.3357,37.3357 0 0 0 46.1866,87.1405 Z",
+    "M46.2912,88.0554 A38.2357,38.2357 0 0 1 28.3796,81.5361 L25.0787,84.4881 A42.55,42.55 0 0 0 46.9223,92.4385 Z",
+  ],
+  [ // Blade 6 — Process (240°)
+    "M44.2482,53.9013 A6.95,6.95 0 0 1 43.7455,53.0305 L39.7445,54.6594 A11.2643,11.2643 0 0 0 40.8372,56.5518 Z",
+    "M40.1417,57.1263 A12.1643,12.1643 0 0 1 38.8993,54.9744 L34.8,56.3643 A16.4786,16.4786 0 0 0 36.8884,59.9814 Z",
+    "M36.2268,60.5978 A17.3786,17.3786 0 0 1 33.9354,56.629 L29.7487,57.7758 A21.6929,21.6929 0 0 0 33.1403,63.6503 Z",
+    "M32.5144,64.3071 A22.5929,22.5929 0 0 1 28.8669,57.9894 L24.6036,58.8891 A26.9071,26.9071 0 0 0 29.6036,67.5494 Z",
+    "M29.0153,68.245 A27.8071,27.8071 0 0 1 23.707,59.0508 L19.3782,59.7 A32.1214,32.1214 0 0 0 26.2886,71.6693 Z",
+    "M25.7396,72.402 A33.0214,33.0214 0 0 1 18.4691,59.8091 L14.086,60.2048 A37.3357,37.3357 0 0 0 23.2054,76.0001 Z",
+    "M22.6973,76.7682 A38.2357,38.2357 0 0 1 13.1668,60.2607 L8.7406,60.4003 A42.55,42.55 0 0 0 20.3634,80.5315 Z",
+  ],
+  [ // Blade 7 — Progress (280°)
+    "M43.0862,49.2914 A6.95,6.95 0 0 1 43.2608,48.3012 L39.1489,46.9772 A11.2643,11.2643 0 0 0 38.7694,49.1292 Z",
+    "M37.8674,49.1223 A12.1643,12.1643 0 0 1 38.2989,46.6752 L34.2652,45.105 A16.4786,16.4786 0 0 0 33.54,49.2182 Z",
+    "M32.637,49.2651 A17.3786,17.3786 0 0 1 33.4328,44.752 L29.4884,42.9393 A21.6929,21.6929 0 0 0 28.3105,49.6195 Z",
+    "M27.4089,49.7204 A22.5929,22.5929 0 0 1 28.6756,42.5362 L24.8314,40.485 A26.9071,26.9071 0 0 0 23.0949,50.333 Z",
+    "M22.1971,50.4878 A27.8071,27.8071 0 0 1 24.0407,40.0325 L20.3073,37.7473 A32.1214,32.1214 0 0 0 17.9073,51.3583 Z",
+    "M17.0158,51.5667 A33.0214,33.0214 0 0 1 19.5408,37.2465 L15.9287,34.7322 A37.3357,37.3357 0 0 0 12.7616,52.694 Z",
+    "M11.8787,52.9558 A38.2357,38.2357 0 0 1 15.1886,34.1842 L11.7083,31.4461 A42.55,42.55 0 0 0 7.6717,54.3384 Z",
+  ],
+  [ // Blade 8 — Power (320°)
+    "M45.1592,45.0131 A6.95,6.95 0 0 1 45.9294,44.3668 L43.6306,40.7094 A11.2643,11.2643 0 0 0 41.9566,42.1141 Z",
+    "M41.2701,41.529 A12.1643,12.1643 0 0 1 43.1736,39.9317 L41.0929,36.1361 A16.4786,16.4786 0 0 0 37.8934,38.8208 Z",
+    "M37.1715,38.2763 A17.3786,17.3786 0 0 1 40.6821,35.3306 L38.8257,31.4066 A21.6929,21.6929 0 0 0 33.6295,35.7668 Z",
+    "M32.8739,35.2645 A22.5929,22.5929 0 0 1 38.4623,30.5753 L36.8359,26.533 A26.9071,26.9071 0 0 0 29.1754,32.9609 Z",
+    "M28.3882,32.5023 A27.8071,27.8071 0 0 1 36.521,25.6781 L35.1299,21.5278 A32.1214,32.1214 0 0 0 24.5425,30.4117 Z",
+    "M23.7256,29.9983 A33.0214,33.0214 0 0 1 34.8647,20.6515 L33.7138,16.4036 A37.3357,37.3357 0 0 0 19.7421,28.1273 Z",
+    "M18.8974,27.7604 A38.2357,38.2357 0 0 1 33.4992,15.5081 L32.593,11.1735 A42.55,42.55 0 0 0 14.786,26.1153 Z",
+  ],
+];
+
+const BLADE_LABEL_POS = [
+  { x: 50, y: -4, anchor: "middle" },
+  { x: 83.4, y: 10.2, anchor: "start" },
+  { x: 101.2, y: 41, anchor: "start" },
+  { x: 95, y: 76, anchor: "start" },
+  { x: 67.8, y: 98.8, anchor: "start" },
+  { x: 32.2, y: 98.8, anchor: "end" },
+  { x: 5, y: 76, anchor: "end" },
+  { x: -1.2, y: 41, anchor: "end" },
+  { x: 16.6, y: 10.2, anchor: "end" },
+];
+
+function BrandMarkChart({ pLevels, onBladeHover, hoveredBlade }) {
+  return (
+    <div style={{ position: "relative", width: "100%", maxWidth: 460, margin: "0 auto" }}>
+      <svg viewBox="-25 -12 150 130" style={{ width: "100%", height: "auto", overflow: "visible" }}>
+        {BLADE_PATHS.map((blade, bladeIdx) => {
+          const pName = P_NAMES[bladeIdx];
+          const assessedLevel = pLevels[pName] || 0;
+          const isHovered = hoveredBlade === bladeIdx;
+
+          return (
+            <g
+              key={bladeIdx}
+              style={{
+                transformOrigin: "50px 50px",
+                transform: isHovered ? "scale(1.22)" : "scale(1)",
+                transition: "transform 0.3s ease",
+                cursor: "pointer",
+                filter: isHovered ? "drop-shadow(0 0 6px " + BRAND.teal + ")" : "none",
+              }}
+              onMouseEnter={() => onBladeHover(bladeIdx)}
+              onMouseLeave={() => onBladeHover(null)}
+              onClick={() => onBladeHover(isHovered ? null : bladeIdx)}
+            >
+              {blade.map((d, segIdx) => {
+                const isFilled = segIdx < assessedLevel;
+                return (
+                  <path
+                    key={segIdx}
+                    d={d}
+                    fill={isFilled ? BLADE_COLORS[segIdx] : DIMMED}
+                    stroke={isFilled ? "none" : DIMMED_STROKE}
+                    strokeWidth={isFilled ? 0 : 0.3}
+                    style={{ transition: "fill 0.4s ease" }}
+                  />
+                );
+              })}
+            </g>
+          );
+        })}
+
+        <circle cx="50" cy="50" r="4" fill="#16d4e8" />
+        <circle cx="50" cy="50" r="5.7" fill="none" stroke="#16d4e8" strokeWidth="0.4" opacity="0.35" />
+
+        {P_NAMES.map((name, i) => {
+          const pos = BLADE_LABEL_POS[i];
+          const isHovered = hoveredBlade === i;
+          return (
+            <text
+              key={i}
+              x={pos.x}
+              y={pos.y}
+              textAnchor={pos.anchor}
+              style={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontSize: "3.2px",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                fill: isHovered ? BRAND.teal : BRAND.gray,
+                transition: "fill 0.2s ease",
+                cursor: "pointer",
+              }}
+              onMouseEnter={() => onBladeHover(i)}
+              onMouseLeave={() => onBladeHover(null)}
+            >
+              {name}
+            </text>
+          );
+        })}
+      </svg>
+
+      {hoveredBlade !== null && (
+        <div style={{
+          position: "absolute", bottom: -10, left: "50%", transform: "translateX(-50%)",
+          background: BRAND.dark2, border: "1px solid rgba(22, 212, 232, 0.2)",
+          padding: "1rem 1.5rem", borderRadius: "4px", width: "100%", maxWidth: 360,
+          zIndex: 10, textAlign: "left",
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.teal, letterSpacing: "0.15em", textTransform: "uppercase" }}>
+              {P_NAMES[hoveredBlade]}
+            </span>
+            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.paleTeal, letterSpacing: "0.1em" }}>
+              LEVEL {pLevels[P_NAMES[hoveredBlade]]}
+            </span>
+          </div>
+          <p style={{ fontSize: "0.85rem", color: BRAND.lightGray, lineHeight: 1.6, margin: 0, marginBottom: "0.75rem" }}>
+            {P_LEVEL_DESC[P_NAMES[hoveredBlade]][pLevels[P_NAMES[hoveredBlade]]]}
+          </p>
+          <div style={{ fontSize: "0.7rem", color: BRAND.teal, fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            ↓ See breakdown below
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+function SelfAssessment() {
+  const [screen, setScreen] = useState("intro");
+  const [assessmentType, setAssessmentType] = useState(null);
+  const [flagged, setFlagged] = useState(false);
+  const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [isFading, setIsFading] = useState(false);
+  const [assessmentId, setAssessmentId] = useState(null);
+
+  const [answers, setAnswers] = useState([]);
+  const [result, setResult] = useState(null);
+
+  const [deepAnswers, setDeepAnswers] = useState([]);
+  const [deepResult, setDeepResult] = useState(null);
+  const [hoveredBlade, setHoveredBlade] = useState(null);
+  const [expandedP, setExpandedP] = useState(null);
+  const [assessmentCount, setAssessmentCount] = useState(null);
+
+  // Fetch counter on mount
+  useEffect(() => {
+    fetch(API_BASE + "/api/counter")
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setAssessmentCount(data.data.count);
+      })
+      .catch(() => {}); // Fail silently — counter is social proof, not critical
+  }, []);
+
+  const transition = (fn) => {
+    setIsFading(true);
+    setTimeout(() => { fn(); setIsFading(false); }, 350);
+  };
+
+  const currentQIndex = answers.length;
+  const currentQ = questions[currentQIndex];
+
+  const handleStartQuick = () => {
+    setAssessmentType("quick");
+    transition(() => setScreen("framing"));
+  };
+
+  const handleStartDeep = () => {
+    setAssessmentType("deep");
+    transition(() => setScreen("framing"));
+  };
+
+  const handleBeginAssessment = () => {
+    transition(() => setScreen(assessmentType === "deep" ? "deep-questions" : "questions"));
+  };
+
+  const handleAnswer = (type) => {
+    const newAnswers = [...answers, type];
+    setIsFading(true);
+    setTimeout(() => {
+      if (newAnswers.length < questions.length) {
+        setAnswers(newAnswers);
+        setIsFading(false);
+      } else {
+        setResult(calculateResult(newAnswers));
+        setAnswers(newAnswers);
+        setScreen("email");
+        setIsFading(false);
+      }
+    }, 350);
+  };
+
+  const deepQIndex = deepAnswers.length;
+  const currentDeepQ = deepQuestions[deepQIndex];
+  const currentPIndex = Math.floor(deepQIndex / 2);
+  const currentPStep = (deepQIndex % 2) + 1;
+
+  const handleDeepAnswer = (range) => {
+    const newAnswers = [...deepAnswers, range];
+    setIsFading(true);
+    setTimeout(() => {
+      if (newAnswers.length < deepQuestions.length) {
+        setDeepAnswers(newAnswers);
+        setIsFading(false);
+      } else {
+        setDeepResult(calculateDeepResult(newAnswers));
+        setDeepAnswers(newAnswers);
+        setScreen("email");
+        setIsFading(false);
+      }
+    }, 350);
+  };
+
+  const handleEmailSubmit = (e) => {
+    e.preventDefault();
+
+    // Build payload — flagged defaults to false, user decides after seeing results
+    const payload = { email, firstName, assessmentType, flagged: false };
+
+    if (assessmentType === "quick" && result) {
+      payload.levelResult = result.level;
+      payload.totalPoints = result.totalPoints;
+      payload.categoryScores = result.categoryScores.map(cat => ({
+        name: cat.name, points: cat.points, maxPoints: cat.maxPoints,
+      }));
+      payload.individualAnswers = answers;
+    } else if (assessmentType === "deep" && deepResult) {
+      payload.levelResult = deepResult.overallLevel;
+      payload.pLevels = deepResult.pLevels;
+      payload.primaryConstraint = deepResult.primaryConstraint;
+      payload.superpower = deepResult.superpower;
+      payload.deepAnswers = deepAnswers;
+    }
+
+    // Fire and forget — don't block the UI on API success
+    fetch(API_BASE + "/api/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          if (data.data.counter) setAssessmentCount(data.data.counter);
+          if (data.data.id) setAssessmentId(data.data.id);
+        }
+      })
+      .catch(err => console.warn("Assessment submission failed:", err));
+
+    // Continue to congrats immediately
+    if (assessmentType === "deep" && deepResult) {
+      setExpandedP(deepResult.primaryConstraint);
+    }
+    transition(() => setScreen("congrats"));
+  };
+
+  const handleFlagFromResults = () => {
+    setFlagged(true);
+
+    // Fire PATCH to mark this assessment as flagged
+    if (assessmentId) {
+      fetch(API_BASE + "/api/flag/" + assessmentId, { method: "PATCH" })
+        .catch(err => console.warn("Flag update failed:", err));
+    }
+  };
+
+  const handleShowResults = () => {
+    transition(() => setScreen(assessmentType === "deep" ? "deep-result" : "result"));
+  };
+
+  const level = result ? result.level : null;
+  const res = level ? results[level] : null;
+  const congratsLevel = assessmentType === "deep" ? (deepResult ? deepResult.overallLevel : null) : level;
+  const congratsRes = congratsLevel ? results[congratsLevel] : null;
+  const deepLevel = deepResult ? deepResult.overallLevel : null;
+  const deepRes = deepLevel ? results[deepLevel] : null;
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: BRAND.dark,
+      color: BRAND.offWhite,
+      fontFamily: "'DM Sans', sans-serif",
+      position: "relative",
+      overflowX: "hidden",
+    }}>
+      <style>{`
+        /* Fonts loaded via <link> in <head> */
+        body { margin: 0; background: ${BRAND.dark}; }
+        * { box-sizing: border-box; }
+
+        .fade-wrap { transition: opacity 0.35s ease, transform 0.35s ease; opacity: 1; transform: translateY(0); }
+        .fade-wrap.out { opacity: 0; transform: translateY(-10px); }
+
+        .btn-gold {
+          background: ${BRAND.teal}; color: ${BRAND.offWhite};
+          padding: 1.2rem 3rem; border-radius: 6px;
+          font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.8rem;
+          letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700;
+          border: none; cursor: pointer; transition: all 0.25s; position: relative;
+          display: inline-block; text-decoration: none;
+        }
+        .btn-gold::after { content: ''; position: absolute; inset: 3px; border: 1px solid rgba(255,255,255,0.15); pointer-events: none; border-radius: 4px; }
+        .btn-gold:hover { background: #0a6e78; transform: translateY(-2px); box-shadow: 0 12px 40px rgba(8,126,139,0.3); }
+
+        .btn-ghost {
+          background: transparent; color: ${BRAND.gray};
+          padding: 1.2rem 3rem; border-radius: 6px;
+          font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.8rem;
+          letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700;
+          border: 1px solid rgba(138,155,176,0.25); cursor: pointer; transition: all 0.2s;
+        }
+        .btn-ghost:hover { border-color: rgba(138,155,176,0.5); color: ${BRAND.offWhite}; }
+
+        .answer-btn {
+          width: 100%; text-align: left; padding: 1.5rem 2rem;
+          background: ${BRAND.offWhite}; border: 1.5px solid ${BRAND.paleTeal};
+          color: ${BRAND.dark}; font-family: 'DM Sans', sans-serif; font-size: 1.05rem;
+          cursor: pointer; transition: all 0.2s; margin-bottom: 1rem;
+          display: flex; align-items: flex-start; gap: 1.5rem; line-height: 1.5;
+          border-radius: 25px;
+        }
+        .answer-btn:hover { border: 2.5px solid ${BRAND.teal}; background: ${BRAND.offWhite}; transform: translateX(4px); }
+
+        .answer-dot {
+          width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+          border: 1.5px solid ${BRAND.paleTeal}; margin-top: 6px;
+        }
+      `}</style>
+
+      <div style={{
+        position: "absolute", top: 0, right: 0, width: "60%", height: "100%",
+        background: "radial-gradient(ellipse at 80% 50%, rgba(46,109,164,0.07) 0%, transparent 70%)",
+        pointerEvents: "none", zIndex: 0
+      }} />
+
+      <div style={{
+        position: "relative", zIndex: 1, minHeight: "100vh",
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        padding: "60px 20px"
+      }}>
+
+        {/* ── INTRO ── */}
+        {screen === "intro" && (
+          <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 700, textAlign: "center" }}>
+            <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", letterSpacing: "0.25em", fontWeight: 700, color: BRAND.teal, textTransform: "uppercase", marginBottom: "2rem" }}>
+              The Autonomous Leader
+            </div>
+            <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 800, lineHeight: 1.1, marginBottom: "1.5rem" }}>
+              Where Are You <span style={{ color: BRAND.teal, fontStyle: "italic" }}>Stuck</span> Right Now?
+            </h1>
+            {assessmentCount && (
+              <p style={{ fontSize: "0.85rem", color: BRAND.gray, marginBottom: "0.75rem", fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "0.05em" }}>
+                <span style={{ color: BRAND.teal, fontWeight: 700 }}>{assessmentCount.toLocaleString()}</span> business owners have taken this assessment.
+              </p>
+            )}
+
+            <p style={{ fontSize: "1.1rem", color: BRAND.lightGray, lineHeight: 1.75, marginBottom: "2.5rem", fontWeight: 400 }}>
+              Most service business owners are stuck at one of 7 levels — and the reason they can't move forward is different at each one.
+            </p>
+
+            {/* Fork: Quick vs In-Depth — placed right after first paragraph */}
+            <div style={{ display: "flex", gap: "1.5rem", justifyContent: "center", flexWrap: "wrap", marginBottom: "2.5rem" }}>
+              <button onClick={handleStartDeep} style={{
+                flex: "1 1 280px", maxWidth: 340, background: "rgba(8, 126, 139, 0.12)",
+                border: "2px solid " + BRAND.teal, padding: "2rem 1.5rem",
+                cursor: "pointer", transition: "all 0.25s", textAlign: "left", borderRadius: "8px",
+              }}
+              onMouseOver={function(e) { e.currentTarget.style.background = "rgba(8, 126, 139, 0.2)"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(8,126,139,0.2)"; }}
+              onMouseOut={function(e) { e.currentTarget.style.background = "rgba(8, 126, 139, 0.12)"; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+              >
+                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.teal, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "0.75rem", fontWeight: 700 }}>
+                  Recommended
+                </div>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.4rem", fontWeight: 700, color: BRAND.offWhite, marginBottom: "0.75rem" }}>
+                  In-Depth Assessment
+                </div>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.paleTeal, letterSpacing: "0.1em", marginBottom: "0.75rem", fontWeight: 700 }}>
+                  18 QUESTIONS — 10 MINUTES
+                </div>
+                <p style={{ fontSize: "0.9rem", color: BRAND.gray, lineHeight: 1.6, margin: 0 }}>
+                  Maps every constraint across all 9 P's. Shows you exactly where you're strong, where you're stuck, and why.
+                </p>
+              </button>
+
+              <button onClick={handleStartQuick} style={{
+                flex: "1 1 280px", maxWidth: 340, background: "transparent",
+                border: "1px solid rgba(138,155,176,0.2)", padding: "2rem 1.5rem",
+                cursor: "pointer", transition: "all 0.25s", textAlign: "left", borderRadius: "8px",
+              }}
+              onMouseOver={function(e) { e.currentTarget.style.borderColor = "rgba(138,155,176,0.5)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+              onMouseOut={function(e) { e.currentTarget.style.borderColor = "rgba(138,155,176,0.2)"; e.currentTarget.style.transform = "none"; }}
+              >
+                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.gray, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "0.75rem", fontWeight: 700 }}>
+                  Quick version
+                </div>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.4rem", fontWeight: 600, color: BRAND.offWhite, marginBottom: "0.75rem" }}>
+                  Quick Assessment
+                </div>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.gray, letterSpacing: "0.1em", marginBottom: "0.75rem", fontWeight: 700 }}>
+                  12 QUESTIONS — 3 MINUTES
+                </div>
+                <p style={{ fontSize: "0.9rem", color: BRAND.gray, lineHeight: 1.6, margin: 0 }}>
+                  Find your overall level. A fast snapshot of where you are right now.
+                </p>
+              </button>
+            </div>
+
+            <p style={{ fontSize: "1rem", color: BRAND.gray, lineHeight: 1.75, fontWeight: 400, maxWidth: 600 }}>
+              You've built something real. You have clients, revenue, maybe even a team. And you're probably still the person everything runs through. This isn't a character flaw — it's a structural problem.
+            </p>
+          </div>
+        )}
+
+        {/* ── FRAMING STATEMENT ── */}
+        {screen === "framing" && (
+          <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 700, width: "100%", textAlign: "center" }}>
+            <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", letterSpacing: "0.25em", fontWeight: 700, color: BRAND.teal, textTransform: "uppercase", marginBottom: "2rem" }}>
+              Before You Begin
+            </div>
+            <div style={{ fontSize: "1.05rem", color: BRAND.lightGray, lineHeight: 1.85, textAlign: "left", marginBottom: "3rem" }}>
+              {FRAMING_STATEMENT.split("\n\n").map((para, i) => (
+                <p key={i} style={{ margin: "0 0 1.25rem 0" }}>{para}</p>
+              ))}
+            </div>
+            <button className="btn-gold" onClick={handleBeginAssessment}>
+              Begin Assessment →
+            </button>
+          </div>
+        )}
+
+        {/* ── QUESTIONS ── */}
+        {screen === "questions" && currentQ && (
+          <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 780, width: "100%" }}>
+            <div style={{ marginBottom: "4rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.gray, letterSpacing: "0.15em", textTransform: "uppercase" }}>
+                <span>{currentQ.category}</span>
+                <span style={{ color: BRAND.teal }}>{currentQIndex + 1} / 12</span>
+              </div>
+              <div style={{ height: "1px", background: "rgba(8,126,139,0.12)", width: "100%" }}>
+                <div style={{ height: "100%", width: ((currentQIndex / 12) * 100) + "%", background: BRAND.teal, transition: "width 0.35s ease" }} />
+              </div>
+            </div>
+
+            <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.paleTeal, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "1rem" }}>
+              {currentQ.pillar}
+            </div>
+
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)", fontWeight: 700, lineHeight: 1.35, marginBottom: "3rem", color: BRAND.offWhite }}>
+              {currentQ.text}
+            </h2>
+
+            <div>
+              <button className="answer-btn" onClick={() => handleAnswer("yes")}>
+                <span className="answer-dot" style={{ background: BRAND.teal, border: "none" }} />
+                <span>{currentQ.yes}</span>
+              </button>
+              <button className="answer-btn" onClick={() => handleAnswer("inProgress")}>
+                <span className="answer-dot" style={{ background: "rgba(8,126,139,0.35)", border: "1px solid rgba(8,126,139,0.5)" }} />
+                <span>{currentQ.inProgress}</span>
+              </button>
+              <button className="answer-btn" onClick={() => handleAnswer("notYet")}>
+                <span className="answer-dot" />
+                <span>{currentQ.notYet}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── DEEP QUESTIONS ── */}
+        {screen === "deep-questions" && currentDeepQ && (
+          <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 780, width: "100%" }}>
+            <div style={{ marginBottom: "4rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.gray, letterSpacing: "0.15em", textTransform: "uppercase" }}>
+                <span>{currentDeepQ.p} — {currentPStep === 1 ? "Your Reality" : "Reality Check"}</span>
+                <span style={{ color: BRAND.teal }}>{deepQIndex + 1} / 18</span>
+              </div>
+              <div style={{ height: "1px", background: "rgba(15,156,172,0.12)", width: "100%" }}>
+                <div style={{ height: "100%", width: ((deepQIndex / 18) * 100) + "%", background: BRAND.teal, transition: "width 0.35s ease" }} />
+              </div>
+            </div>
+
+            {currentPStep === 1 && (
+              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.paleTeal, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "1rem" }}>
+                {P_CORE_QUESTIONS[currentPIndex]}
+              </div>
+            )}
+
+            {currentPStep === 2 && (
+              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.accent, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "1rem" }}>
+                Scenario validation
+              </div>
+            )}
+
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(1.6rem, 3vw, 2.4rem)", fontWeight: 700, lineHeight: 1.35, marginBottom: "2.5rem", color: BRAND.offWhite }}>
+              {currentDeepQ.text}
+            </h2>
+
+            <div>
+              {currentDeepQ.options.map((opt, idx) => (
+                <button key={idx} className="answer-btn" onClick={() => handleDeepAnswer(opt.range)}>
+                  <span className="answer-dot" />
+                  <span>{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── FLAG QUESTION ── */}
+        {/* ── EMAIL GATE ── */}
+        {screen === "email" && (
+          <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 500, width: "100%", textAlign: "center" }}>
+            <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "4rem", color: BRAND.teal, marginBottom: "0.5rem", fontStyle: "italic", lineHeight: 1 }}>
+              Done.
+            </div>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "2rem", fontWeight: 700, marginBottom: "1.5rem" }}>
+              Your diagnosis is ready.
+            </h2>
+            <p style={{ fontSize: "1.05rem", color: BRAND.gray, lineHeight: 1.7, marginBottom: "2.5rem" }}>
+              What name should we put on the results?
+            </p>
+            <form onSubmit={handleEmailSubmit}>
+              <input
+                type="text"
+                placeholder="First name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+                style={{
+                  width: "100%", padding: "1.2rem 1.5rem",
+                  background: BRAND.dark2, border: "1px solid rgba(8,126,139,0.25)",
+                  color: BRAND.offWhite, fontSize: "1rem", marginBottom: "1rem",
+                  fontFamily: "'DM Sans', sans-serif", outline: "none"
+                }}
+              />
+              <input
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                style={{
+                  width: "100%", padding: "1.2rem 1.5rem",
+                  background: BRAND.dark2, border: "1px solid rgba(8,126,139,0.25)",
+                  color: BRAND.offWhite, fontSize: "1rem", marginBottom: "1.5rem",
+                  fontFamily: "'DM Sans', sans-serif", outline: "none"
+                }}
+              />
+              <button type="submit" className="btn-gold" style={{ width: "100%" }}>
+                Reveal My Results →
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* ── CONGRATULATIONS ── */}
+        {screen === "congrats" && congratsRes && (
+          <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 700, width: "100%", textAlign: "center" }}>
+            <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", letterSpacing: "0.25em", fontWeight: 700, color: BRAND.teal, textTransform: "uppercase", marginBottom: "1.5rem" }}>
+              {congratsRes.label}
+            </div>
+            <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 800, lineHeight: 1.2, marginBottom: "2rem", color: BRAND.offWhite }}>
+              {congratsRes.headline}
+            </h1>
+            <div style={{ fontSize: "1.05rem", color: BRAND.lightGray, lineHeight: 1.85, textAlign: "left", whiteSpace: "pre-wrap", marginBottom: "3rem" }}>
+              {congratsRes.body}
+            </div>
+            <button className="btn-gold" onClick={handleShowResults}>
+              See Your Complete Results →
+            </button>
+          </div>
+        )}
+
+        {/* ── QUICK RESULT SCREEN ── */}
+        {screen === "result" && result && res && (
+          <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 760, width: "100%", textAlign: "left" }}>
+
+            <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", letterSpacing: "0.25em", fontWeight: 700, color: BRAND.teal, textTransform: "uppercase", marginBottom: "1.25rem" }}>
+                Your Final Diagnosis
+              </div>
+              <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 800, lineHeight: 1.1, marginBottom: "1.5rem" }}>
+                {res.label}
+              </h1>
+              <p style={{ fontSize: "1.1rem", color: BRAND.gray, lineHeight: 1.75, maxWidth: 600, margin: "0 auto" }}>
+                We've also sent this breakdown to <span style={{ color: BRAND.offWhite }}>{email}</span>.
+              </p>
+            </div>
+
+            <div style={{ background: "linear-gradient(180deg, rgba(27,58,92,0.1) 0%, transparent 100%)", padding: "3rem", border: "1px solid rgba(46,109,164,0.15)", borderRadius: "4px", marginBottom: "4rem" }}>
+              <CategoryBreakdown categoryScores={result.categoryScores} />
+
+              {/* ── P-SIGNAL GRID ── */}
+              {result.pSignals && (
+                <div style={{ marginTop: "2.5rem", paddingTop: "2rem", borderTop: "1px solid rgba(138,155,176,0.15)" }}>
+                  <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.paleTeal, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "1rem" }}>
+                    9P Signal Check
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
+                    {P_NAMES.map(p => {
+                      const signal = result.pSignals[p];
+                      const color = signal === "Strong" ? "#2ecc71" : signal === "Growing" ? "#f39c12" : signal === "Developing" ? BRAND.coral : BRAND.gray;
+                      return (
+                        <div key={p} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: signal ? color : "rgba(138,155,176,0.3)", flexShrink: 0 }} />
+                          <span style={{ fontSize: "0.8rem", color: signal ? BRAND.offWhite : BRAND.gray }}>
+                            {p}{signal ? ` — ${signal}` : " — N/A"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p style={{ fontSize: "0.75rem", color: BRAND.gray, marginTop: "1rem", lineHeight: 1.5, fontStyle: "italic" }}>
+                    These are directional signals from 12 questions. The In-Depth Assessment gives a precise level (1–7) for each P.
+                  </p>
+                </div>
+              )}
+
+              {/* ── PLAYBOOK SECTION ── */}
+              {(() => {
+                // Find the weakest category and map it to a primary P
+                const categoryToPrimary = {
+                  "Foundation & Clarity": "Pipeline",
+                  "Systems & Execution": "Process",
+                  "Team & Autonomy": "People",
+                  "Leadership & Authority": "Power",
+                  "The Strategist": "Perspective",
+                };
+                const weakest = [...result.categoryScores].sort((a, b) => (a.points / a.maxPoints) - (b.points / b.maxPoints))[0];
+                const primaryP = categoryToPrimary[weakest.name];
+                return (
+                  <div style={{ marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid rgba(138,155,176,0.15)" }}>
+                    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.teal, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "0.75rem", fontWeight: 700 }}>
+                      Your Playbook This Week
+                    </div>
+                    <p style={{ fontSize: "0.85rem", color: BRAND.gray, lineHeight: 1.6, marginBottom: "1rem" }}>
+                      Your weakest area was <strong style={{ color: BRAND.offWhite }}>{weakest.name}</strong> — here's where to start with <strong style={{ color: BRAND.offWhite }}>{primaryP}</strong>:
+                    </p>
+                    <p style={{ fontSize: "0.95rem", color: BRAND.lightGray, lineHeight: 1.75, marginBottom: "1.5rem" }}>
+                      {SOLUTION_LONG[primaryP][level]}
+                    </p>
+                    <p style={{ fontSize: "0.85rem", color: BRAND.gray, lineHeight: 1.6, fontStyle: "italic" }}>
+                      Want the full 9P breakdown? Take the <strong style={{ color: BRAND.offWhite }}>In-Depth Assessment</strong> for a level-by-level diagnosis of every dimension.
+                    </p>
+                  </div>
+                );
+              })()}
+
+              <div style={{ marginTop: "2rem", paddingTop: "2rem", borderTop: "1px solid rgba(138,155,176,0.15)" }}>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.paleTeal, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "1rem" }}>
+                  The Next Move
+                </div>
+                <p style={{ fontSize: "1.05rem", color: BRAND.offWhite, lineHeight: 1.6, marginBottom: "2rem" }}>
+                  {res.next}
+                </p>
+                <button className="btn-gold" style={{ width: "100%", textAlign: "center" }}>
+                  {res.cta}
+                </button>
+              </div>
+            </div>
+
+            <div style={{ textAlign: "center", paddingTop: "1rem" }}>
+              {flagged ? (
+                <div style={{ display: "inline-block", textAlign: "left", background: "rgba(46,109,164,0.07)", border: "1px solid rgba(46,109,164,0.2)", padding: "2rem", maxWidth: 600, borderRadius: "4px" }}>
+                  <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.accent, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
+                    You're on our radar
+                  </div>
+                  <p style={{ fontSize: "0.95rem", color: BRAND.gray, lineHeight: 1.75, margin: 0 }}>
+                    Someone from our team will reach out to you directly. You don't need to wait for a sequence — we'll come to you to discuss these findings.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ maxWidth: 600, margin: "0 auto" }}>
+                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.4rem", fontWeight: 700, color: BRAND.offWhite, lineHeight: 1.4, marginBottom: "1rem" }}>
+                    Now that you've seen the diagnosis — would it help to walk through it with someone who's seen hundreds of businesses at this level?
+                  </h3>
+                  <p style={{ fontSize: "0.95rem", color: BRAND.gray, lineHeight: 1.7, marginBottom: "2rem" }}>
+                    A 40–60 minute business assessment call. No pitch — just an honest look at what's keeping you at Level {level} and what the specific next move is.
+                  </p>
+                  <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+                    <button className="btn-gold" onClick={handleFlagFromResults}>
+                      Yes, that would be helpful
+                    </button>
+                    <button className="btn-ghost" style={{ opacity: 0.6 }}>
+                      I'm good for now
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+
+        {/* ── DEEP RESULT SCREEN ── */}
+        {screen === "deep-result" && deepResult && deepRes && (
+          <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 820, width: "100%", textAlign: "left" }}>
+
+            <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", letterSpacing: "0.25em", fontWeight: 700, color: BRAND.teal, textTransform: "uppercase", marginBottom: "1.25rem" }}>
+                Your Complete 9P Profile
+              </div>
+              <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(2.2rem, 4.5vw, 3.5rem)", fontWeight: 800, lineHeight: 1.1, marginBottom: "1rem" }}>
+                {deepRes.label}
+              </h1>
+              <p style={{ fontSize: "1rem", color: BRAND.gray, lineHeight: 1.6, maxWidth: 500, margin: "0 auto" }}>
+                Your business is as strong as its weakest P. We've sent the full breakdown to <span style={{ color: BRAND.offWhite }}>{email}</span>.
+              </p>
+            </div>
+
+            <div style={{ marginBottom: "3rem" }}>
+              <BrandMarkChart
+                pLevels={deepResult.pLevels}
+                hoveredBlade={hoveredBlade}
+                onBladeHover={setHoveredBlade}
+              />
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "3rem" }}>
+              <div style={{ background: BRAND.dark2, padding: "2rem", borderRadius: "4px", border: "1px solid rgba(255, 90, 95, 0.2)" }}>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.coral, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
+                  Primary Constraint
+                </div>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.6rem", fontWeight: 600, color: BRAND.offWhite, marginBottom: "0.5rem" }}>
+                  {deepResult.primaryConstraint}
+                  <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.coral, marginLeft: "0.75rem" }}>
+                    L{deepResult.pLevels[deepResult.primaryConstraint]}
+                  </span>
+                </div>
+                <p style={{ fontSize: "0.85rem", color: BRAND.gray, lineHeight: 1.6, margin: 0 }}>
+                  {P_LEVEL_DESC[deepResult.primaryConstraint][deepResult.pLevels[deepResult.primaryConstraint]]}
+                </p>
+              </div>
+
+              <div style={{ background: BRAND.dark2, padding: "2rem", borderRadius: "4px", border: "1px solid rgba(22, 212, 232, 0.2)" }}>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.paleTeal, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
+                  Superpower
+                </div>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.6rem", fontWeight: 600, color: BRAND.offWhite, marginBottom: "0.5rem" }}>
+                  {deepResult.superpower}
+                  <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.teal, marginLeft: "0.75rem" }}>
+                    L{deepResult.pLevels[deepResult.superpower]}
+                  </span>
+                </div>
+                <p style={{ fontSize: "0.85rem", color: BRAND.gray, lineHeight: 1.6, margin: 0 }}>
+                  {P_LEVEL_DESC[deepResult.superpower][deepResult.pLevels[deepResult.superpower]]}
+                </p>
+              </div>
+            </div>
+
+            <div style={{ background: "linear-gradient(180deg, rgba(15,156,172,0.06) 0%, transparent 100%)", padding: "2.5rem", border: "1px solid rgba(15,156,172,0.15)", borderRadius: "4px", marginBottom: "3rem" }}>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.paleTeal, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
+                The Next Move
+              </div>
+              <p style={{ fontSize: "1rem", color: BRAND.offWhite, lineHeight: 1.6, marginBottom: "2rem" }}>
+                {deepRes.next}
+              </p>
+              <button className="btn-gold" style={{ width: "100%", textAlign: "center" }}>
+                {deepRes.cta}
+              </button>
+            </div>
+
+            <div style={{ background: BRAND.dark2, padding: "2.5rem", borderRadius: "4px", border: "1px solid rgba(138,155,176,0.1)", marginBottom: "3rem" }}>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.gray, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "1.5rem" }}>
+                Complete 9P Breakdown
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+                {P_NAMES.map((pName, i) => {
+                  const pLevel = deepResult.pLevels[pName];
+                  const isExpanded = expandedP === pName;
+                  const isConstraint = pName === deepResult.primaryConstraint;
+                  const isSuperpower = pName === deepResult.superpower;
+                  return (
+                    <div key={i} style={{ borderBottom: "1px solid rgba(138,155,176,0.08)" }}>
+                      <button
+                        onClick={() => setExpandedP(isExpanded ? null : pName)}
+                        style={{
+                          width: "100%", display: "flex", alignItems: "center",
+                          padding: "1.1rem 0", background: "transparent", border: "none",
+                          cursor: "pointer", transition: "all 0.2s", gap: "0.75rem",
+                        }}
+                      >
+                        <span style={{
+                          fontSize: "1.3rem", color: BRAND.teal, fontWeight: 700,
+                          width: "1.5rem", textAlign: "center", flexShrink: 0,
+                          transition: "transform 0.2s", display: "inline-block",
+                          transform: isExpanded ? "rotate(90deg)" : "none",
+                          fontFamily: "system-ui, sans-serif",
+                        }}>
+                          ＋
+                        </span>
+                        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "1rem", color: BRAND.offWhite, fontWeight: 500, flexGrow: 1, textAlign: "left" }}>
+                          {pName}
+                        </span>
+                        {isConstraint && (
+                          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.6rem", color: BRAND.coral, letterSpacing: "0.1em", textTransform: "uppercase", padding: "3px 10px", border: "1px solid rgba(255,90,95,0.3)", borderRadius: "3px", flexShrink: 0 }}>
+                            Constraint
+                          </span>
+                        )}
+                        {isSuperpower && (
+                          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.6rem", color: BRAND.teal, letterSpacing: "0.1em", textTransform: "uppercase", padding: "3px 10px", border: "1px solid rgba(15,156,172,0.3)", borderRadius: "3px", flexShrink: 0 }}>
+                            Strength
+                          </span>
+                        )}
+                        <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+                          {Array.from({ length: 7 }).map((_, j) => (
+                            <div key={j} style={{
+                              width: 8, height: 8, borderRadius: "50%",
+                              background: j < pLevel ? BLADE_COLORS[j] : "rgba(138,155,176,0.15)",
+                              border: j < pLevel ? "none" : "1px solid rgba(138,155,176,0.2)",
+                              transition: "all 0.3s ease",
+                            }} />
+                          ))}
+                        </div>
+                        <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.75rem", color: BRAND.gray, flexShrink: 0, minWidth: "1.5rem", textAlign: "right" }}>
+                          L{pLevel}
+                        </span>
+                      </button>
+                      {isExpanded && (
+                        <div style={{ padding: "0 0 1.5rem 2.25rem" }}>
+                          <p style={{ fontSize: "0.95rem", color: BRAND.lightGray, lineHeight: 1.75, margin: "0 0 1.25rem 0" }}>
+                            {P_LEVEL_DESC_LONG[pName][pLevel]}
+                          </p>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                            <div style={{ background: "rgba(255,90,95,0.06)", border: "1px solid rgba(255,90,95,0.15)", borderRadius: "6px", padding: "1rem 1.25rem" }}>
+                              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.6rem", color: BRAND.coral, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>
+                                The Problem
+                              </div>
+                              <p style={{ fontSize: "0.85rem", color: BRAND.lightGray, lineHeight: 1.65, margin: 0 }}>
+                                {P_LEVEL_BOTTLENECK[pName][pLevel]}
+                              </p>
+                            </div>
+                            <div style={{ background: "rgba(8,126,139,0.08)", border: "1px solid rgba(8,126,139,0.2)", borderRadius: "6px", padding: "1rem 1.25rem" }}>
+                              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.6rem", color: BRAND.teal, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>
+                                The Solution
+                              </div>
+                              <p style={{ fontSize: "0.85rem", color: BRAND.lightGray, lineHeight: 1.65, margin: 0 }}>
+                                {P_LEVEL_UNLOCK[pName][pLevel]}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* ── YOUR PLAYBOOK THIS WEEK ── */}
+            {(() => {
+              const constraintP = deepResult.primaryConstraint;
+              const constraintLevel = deepResult.pLevels[constraintP];
+              const superpowerP = deepResult.superpower;
+              const superpowerLevel = deepResult.pLevels[superpowerP];
+              return (
+                <div style={{ background: "rgba(8,126,139,0.06)", border: "1px solid rgba(8,126,139,0.2)", borderRadius: "6px", padding: "2.5rem", marginBottom: "3rem" }}>
+                  <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.teal, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "0.75rem", fontWeight: 700 }}>
+                    Your Playbook This Week
+                  </div>
+                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.5rem", fontWeight: 700, color: BRAND.offWhite, marginBottom: "1.5rem" }}>
+                    Start here — {constraintP} is the bottleneck
+                  </h3>
+                  <p style={{ fontSize: "0.95rem", color: BRAND.lightGray, lineHeight: 1.75, marginBottom: "1.5rem" }}>
+                    {SOLUTION_LONG[constraintP][constraintLevel]}
+                  </p>
+                  <div style={{ borderTop: "1px solid rgba(138,155,176,0.15)", paddingTop: "1.5rem", marginTop: "0.5rem" }}>
+                    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.paleTeal, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.5rem" }}>
+                      Meanwhile, protect your strength
+                    </div>
+                    <p style={{ fontSize: "0.85rem", color: BRAND.gray, lineHeight: 1.7, margin: 0 }}>
+                      <strong style={{ color: BRAND.offWhite }}>{superpowerP} (Level {superpowerLevel}):</strong> {P_LEVEL_UNLOCK[superpowerP][superpowerLevel]}
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div style={{ textAlign: "center", paddingTop: "1rem" }}>
+              {flagged ? (
+                <div style={{ display: "inline-block", textAlign: "left", background: "rgba(46,109,164,0.07)", border: "1px solid rgba(46,109,164,0.2)", padding: "2rem", maxWidth: 600, borderRadius: "4px" }}>
+                  <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.accent, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
+                    You're on our radar
+                  </div>
+                  <p style={{ fontSize: "0.95rem", color: BRAND.gray, lineHeight: 1.75, margin: 0 }}>
+                    Someone from our team will reach out to you directly. You don't need to wait for a sequence — we'll come to you to discuss these findings.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ maxWidth: 600, margin: "0 auto" }}>
+                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.4rem", fontWeight: 700, color: BRAND.offWhite, lineHeight: 1.4, marginBottom: "1rem" }}>
+                    You've seen where {deepResult.primaryConstraint} is holding you back. Want to walk through the fix with someone who's helped hundreds of owners break through this exact constraint?
+                  </h3>
+                  <p style={{ fontSize: "0.95rem", color: BRAND.gray, lineHeight: 1.7, marginBottom: "2rem" }}>
+                    A 40–60 minute business assessment call. No pitch — just a focused conversation on your {deepResult.primaryConstraint} bottleneck and the fastest path forward.
+                  </p>
+                  <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+                    <button className="btn-gold" onClick={handleFlagFromResults}>
+                      Yes, let's talk about {deepResult.primaryConstraint}
+                    </button>
+                    <button className="btn-ghost" style={{ opacity: 0.6 }}>
+                      I'm good for now
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<SelfAssessment />);
+    </script>
+</body>
+
+</html>
