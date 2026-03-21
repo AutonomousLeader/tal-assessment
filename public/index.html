@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1C1C1C">
     <title>TAL Self Assessment Demo</title>
 
     <!-- React and ReactDOM (production builds — smaller, faster) -->
@@ -14,7 +15,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600;1,700;1,800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 
     <style>
         body {
@@ -27,6 +28,11 @@
 
 <body>
     <div id="root"></div>
+    <noscript>
+      <p style="color: #F5F5F5; text-align: center; padding: 4rem; font-family: sans-serif;">
+        This assessment requires JavaScript to run. Please enable JavaScript and refresh the page.
+      </p>
+    </noscript>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
@@ -1131,11 +1137,18 @@ function SelfAssessment() {
           border: 1.5px solid ${BRAND.paleTeal}; margin-top: 6px;
         }
 
+        .form-input:focus { border-color: ${BRAND.teal} !important; box-shadow: 0 0 0 2px rgba(8,126,139,0.25); }
+        .btn-gold:focus-visible { outline: 2px solid ${BRAND.teal}; outline-offset: 2px; }
+        .btn-ghost:focus-visible { outline: 2px solid ${BRAND.gray}; outline-offset: 2px; }
+        .answer-btn:focus-visible { outline: 2px solid ${BRAND.teal}; outline-offset: 2px; }
+        .p-row-btn:focus-visible { outline: 2px solid ${BRAND.teal}; outline-offset: -2px; }
+
         @media (max-width: 600px) {
           .answer-btn { padding: 1.2rem 1.2rem; gap: 1rem; font-size: 0.95rem; }
           .cs-grid { grid-template-columns: 1fr !important; }
           .pb-grid { grid-template-columns: 1fr !important; }
-          .p-badge { font-size: 0.5rem !important; padding: 2px 5px !important; letter-spacing: 0.05em !important; }
+          .p-signal-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .p-badge { font-size: 0.6rem !important; padding: 2px 6px !important; letter-spacing: 0.05em !important; }
           .p-row-btn { gap: 0.5rem !important; }
           .p-row-dots { gap: 3px !important; }
           .p-row-dots > div { width: 6px !important; height: 6px !important; }
@@ -1344,26 +1357,32 @@ function SelfAssessment() {
               <input
                 type="text"
                 placeholder="First name"
+                aria-label="First name"
+                autoComplete="given-name"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
+                className="form-input"
                 style={{
                   width: "100%", padding: "1.2rem 1.5rem",
                   background: BRAND.dark2, border: "1px solid rgba(8,126,139,0.25)",
-                  color: BRAND.offWhite, fontSize: "1rem", marginBottom: "1rem",
+                  color: BRAND.offWhite, fontSize: "16px", marginBottom: "1rem",
                   fontFamily: "'DM Sans', sans-serif", outline: "none"
                 }}
               />
               <input
                 type="email"
                 placeholder="Email address"
+                aria-label="Email address"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="form-input"
                 style={{
                   width: "100%", padding: "1.2rem 1.5rem",
                   background: BRAND.dark2, border: "1px solid rgba(8,126,139,0.25)",
-                  color: BRAND.offWhite, fontSize: "1rem", marginBottom: "1.5rem",
+                  color: BRAND.offWhite, fontSize: "16px", marginBottom: "1.5rem",
                   fontFamily: "'DM Sans', sans-serif", outline: "none"
                 }}
               />
@@ -1417,7 +1436,7 @@ function SelfAssessment() {
                   <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.paleTeal, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "1rem" }}>
                     9P Signal Check
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
+                  <div className="p-signal-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
                     {P_NAMES.map(p => {
                       const signal = result.pSignals[p];
                       const color = signal === "Strong" ? "#2ecc71" : signal === "Growing" ? "#f39c12" : signal === "Developing" ? BRAND.coral : BRAND.gray;
@@ -1595,6 +1614,7 @@ function SelfAssessment() {
                     <div key={i} style={{ borderBottom: "1px solid rgba(138,155,176,0.08)" }}>
                       <button
                         className="p-row-btn"
+                        aria-expanded={isExpanded}
                         onClick={() => setExpandedP(isExpanded ? null : pName)}
                         style={{
                           width: "100%", display: "flex", alignItems: "center",
