@@ -55,6 +55,19 @@ function initializeDatabase() {
     );
 
     INSERT OR IGNORE INTO counter (id, count) VALUES (1, 421);
+
+    CREATE TABLE IF NOT EXISTS reminders (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL,
+      assessment_id INTEGER,
+      remind_at TEXT NOT NULL,
+      sent INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (assessment_id) REFERENCES assessments(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_reminders_remind_at ON reminders(remind_at);
+    CREATE INDEX IF NOT EXISTS idx_reminders_sent ON reminders(sent);
   `);
 
   return db;

@@ -12,6 +12,8 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <!-- Babel (JSX transpilation) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js" defer></script>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -68,18 +70,18 @@ const FRAMING_STATEMENT = "This assessment measures one thing — how far you've
 
 // ─── QUESTIONS ────────────────────────────────────────────────────────────────
 const questions = [
-  { id: 1, category: "Foundation & Clarity", pillar: "Profit", text: "Do new clients come in on a consistent, predictable schedule?", yes: "Yes — we have a real system. It's not just hoping the phone rings.", inProgress: "In progress — we're building toward that, but right now it's mostly referrals and relationships driving the pipeline.", notYet: "Not yet — we're still in the early stages of creating a predictable client acquisition system." },
+  { id: 1, category: "Foundation & Clarity", pillar: "Pipeline", text: "Do new clients come in on a consistent, predictable schedule?", yes: "Yes — we have a real system. It's not just hoping the phone rings.", inProgress: "In progress — we're building toward that, but right now it's mostly referrals and relationships driving the pipeline.", notYet: "Not yet — we're still in the early stages of creating a predictable client acquisition system." },
   { id: 2, category: "Foundation & Clarity", pillar: "Perspective", text: "When clients refer someone to you, are they recommending the business — rather than recommending you personally?", yes: "Yes — they're recommending what we do, not just who I am.", inProgress: "In progress — it's a mix. Some refer the business, but many are still referring me by name.", notYet: "Not yet — the reputation is built around me personally, which means there's a big opportunity to expand the brand beyond myself." },
   { id: 3, category: "Systems & Execution", pillar: "Process", text: "If you hired someone tomorrow and handed them your training documents, could they do the job without you needing to explain it?", yes: "Yes — the playbooks are solid. Someone could step in and get it done.", inProgress: "In progress — we have some documentation, but a new hire would still need hands-on guidance for the important parts.", notYet: "Not yet — the knowledge is there, it just hasn't been captured into a system yet. That's the next unlock." },
   { id: 4, category: "Systems & Execution", pillar: "Program", text: "Have you automated or systemized the repetitive tasks your team does every week?", yes: "Yes — if it repeats, we've built a system or automated it.", inProgress: "In progress — we've automated some things, but there's still manual work that could be systemized.", notYet: "Not yet — most of the repetitive work is still done by hand, which means there's a lot of leverage waiting to be built." },
   { id: 5, category: "Team & Autonomy", pillar: "People", text: "When you hand off a project to your team, does it come back done right the first time?", yes: "Yes — my team owns their work and delivers it the right way.", inProgress: "In progress — it's getting better, but we're still refining the handoff process to get consistent first-time results.", notYet: "Not yet — I'm still closely involved in quality control, which tells me the next growth step is building stronger handoff systems." },
   { id: 6, category: "Team & Autonomy", pillar: "Progress", text: "Do you have 5 to 7 numbers you look at every week that tell you whether the business is healthy?", yes: "Yes — I know exactly where the business stands every Monday morning.", inProgress: "In progress — we track some numbers, but they're not yet organized into a weekly rhythm that drives decisions.", notYet: "Not yet — I'm still relying more on instinct than data, which means a simple scorecard would be a quick win." },
-  { id: 7, category: "Team & Autonomy", pillar: "Visibility", text: "Without checking anything right now — do you know how much is in your pipeline as well as which client is most at risk of leaving?", yes: "Yes — those numbers are top of mind for me.", inProgress: "In progress — I have a general sense, but I'd need to check the details to be precise.", notYet: "Not yet — those aren't numbers I carry day to day yet, which shows me where to focus next." },
+  { id: 7, category: "Team & Autonomy", pillar: "Progress", text: "Without checking anything right now — do you know how much is in your pipeline as well as which client is most at risk of leaving?", yes: "Yes — those numbers are top of mind for me.", inProgress: "In progress — I have a general sense, but I'd need to check the details to be precise.", notYet: "Not yet — those aren't numbers I carry day to day yet, which shows me where to focus next." },
   { id: 8, category: "Leadership & Authority", pillar: "Power", text: "Does your team have the authority to handle pricing exceptions, client complaints, and day-to-day decisions without coming to you?", yes: "Yes — they know exactly what they're authorized to decide without me.", inProgress: "In progress — some decisions are delegated, but most meaningful calls still route through me.", notYet: "Not yet — I'm still the primary decision point, which means defining clear decision authority is the next step." },
   { id: 9, category: "Leadership & Authority", pillar: "Principles", text: "If your team had to make a difficult client decision tonight with no access to you — would they know exactly how you'd want them to handle it?", yes: "Yes — our standards are clearly defined and the team actually uses them.", inProgress: "In progress — they'd make a reasonable call based on what they've seen me do, but they wouldn't feel fully confident.", notYet: "Not yet — they'd likely wait for me, which tells me it's time to get our standards out of my head and into a shared framework." },
-  { id: 10, category: "Leadership & Authority", pillar: "The Source Shift", text: "Does your team maintain the same energy and confidence whether you're in the room or not?", yes: "Yes — the team holds the standard whether I'm there or not.", inProgress: "In progress — the team is growing into this, and my presence still elevates the room noticeably.", notYet: "Not yet — the team still looks to me as the energy source, which means there's an opportunity to develop more independent leadership." },
-  { id: 11, category: "The Strategist", pillar: "Strategy Time", text: "Are you spending most of your time working on the business rather than in it?", yes: "Yes — I've moved out of the day-to-day and into owner-level work.", inProgress: "In progress — I'm splitting my time between strategic work and execution, and gradually shifting the balance.", notYet: "Not yet — I'm still deep in the day-to-day, which means the next step is freeing myself up to focus on higher-leverage work." },
-  { id: 12, category: "The Strategist", pillar: "True Autonomy", text: "Could your business keep running at full capacity if you stepped away completely for 30 days?", yes: "Yes — the business runs without me.", inProgress: "In progress — it would run, but some things would slow down or wait for my return.", notYet: "Not yet — the business still relies on my daily involvement, which is exactly why building toward autonomy matters." },
+  { id: 10, category: "Leadership & Authority", pillar: "People", text: "Does your team maintain the same energy and confidence whether you're in the room or not?", yes: "Yes — the team holds the standard whether I'm there or not.", inProgress: "In progress — the team is growing into this, and my presence still elevates the room noticeably.", notYet: "Not yet — the team still looks to me as the energy source, which means there's an opportunity to develop more independent leadership." },
+  { id: 11, category: "The Strategist", pillar: "Perspective", text: "Are you spending most of your time working on the business rather than in it?", yes: "Yes — I've moved out of the day-to-day and into owner-level work.", inProgress: "In progress — I'm splitting my time between strategic work and execution, and gradually shifting the balance.", notYet: "Not yet — I'm still deep in the day-to-day, which means the next step is freeing myself up to focus on higher-leverage work." },
+  { id: 12, category: "The Strategist", pillar: "Power", text: "Could your business keep running at full capacity if you stepped away completely for 30 days?", yes: "Yes — the business runs without me.", inProgress: "In progress — it would run, but some things would slow down or wait for my return.", notYet: "Not yet — the business still relies on my daily involvement, which is exactly why building toward autonomy matters." },
 ];
 
 // ─── IN-DEPTH ASSESSMENT ─────────────────────────────────────────────────────
@@ -683,6 +685,39 @@ function calculateResult(answersArr) {
   return { level, totalPoints, categoryScores, pSignals };
 }
 
+// ─── SECTION NAV ─────────────────────────────────────────────────────────────
+function SectionNav({ sections }) {
+  const handleClick = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  return (
+    <div style={{
+      position: "sticky", top: 0, zIndex: 20,
+      background: "rgba(28,28,28,0.92)", backdropFilter: "blur(8px)",
+      padding: "0.75rem 0", marginBottom: "2rem",
+      borderBottom: "1px solid rgba(138,155,176,0.08)",
+      display: "flex", gap: "0.25rem", justifyContent: "center", flexWrap: "wrap",
+    }}>
+      {sections.map(s => (
+        <button key={s.id} onClick={() => handleClick(s.id)} style={{
+          background: "rgba(138,155,176,0.08)", border: "1px solid rgba(138,155,176,0.12)",
+          borderRadius: "20px", padding: "0.4rem 1rem",
+          fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem",
+          letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 600,
+          color: BRAND.gray, cursor: "pointer", transition: "all 0.2s",
+          whiteSpace: "nowrap",
+        }}
+        onMouseOver={function(e) { e.currentTarget.style.color = BRAND.offWhite; e.currentTarget.style.borderColor = "rgba(8,126,139,0.4)"; }}
+        onMouseOut={function(e) { e.currentTarget.style.color = BRAND.gray; e.currentTarget.style.borderColor = "rgba(138,155,176,0.12)"; }}
+        >
+          {s.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ─── CATEGORY BREAKDOWN ───────────────────────────────────────────────────────
 function CategoryBreakdown({ categoryScores }) {
   return (
@@ -907,10 +942,10 @@ function BrandMarkChart({ pLevels, onBladeHover, hoveredBlade }) {
       </svg>
 
       {hoveredBlade !== null && (
-        <div style={{
+        <div className="blade-tooltip" style={{
           position: "absolute", bottom: -10, left: "50%", transform: "translateX(-50%)",
           background: BRAND.dark2, border: "1px solid rgba(22, 212, 232, 0.2)",
-          padding: "1rem 1.5rem", borderRadius: "4px", width: "100%", maxWidth: 360,
+          padding: "1rem 1.5rem", borderRadius: "4px", width: "100%", maxWidth: "min(360px, calc(100vw - 40px))",
           zIndex: 10, textAlign: "left",
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
@@ -1000,6 +1035,15 @@ function SelfAssessment() {
     }, 350);
   };
 
+  const handleGoBack = () => {
+    if (answers.length === 0) return;
+    setIsFading(true);
+    setTimeout(() => {
+      setAnswers(answers.slice(0, -1));
+      setIsFading(false);
+    }, 350);
+  };
+
   const deepQIndex = deepAnswers.length;
   const currentDeepQ = deepQuestions[deepQIndex];
   const currentPIndex = Math.floor(deepQIndex / 2);
@@ -1018,6 +1062,15 @@ function SelfAssessment() {
         setScreen("email");
         setIsFading(false);
       }
+    }, 350);
+  };
+
+  const handleDeepGoBack = () => {
+    if (deepAnswers.length === 0) return;
+    setIsFading(true);
+    setTimeout(() => {
+      setDeepAnswers(deepAnswers.slice(0, -1));
+      setIsFading(false);
     }, 350);
   };
 
@@ -1057,11 +1110,11 @@ function SelfAssessment() {
       })
       .catch(err => console.warn("Assessment submission failed:", err));
 
-    // Continue to congrats immediately
+    // Go directly to results
     if (assessmentType === "deep" && deepResult) {
       setExpandedP(deepResult.primaryConstraint);
     }
-    transition(() => setScreen("congrats"));
+    transition(() => setScreen(assessmentType === "deep" ? "deep-result" : "result"));
   };
 
   const handleFlagFromResults = () => {
@@ -1074,14 +1127,36 @@ function SelfAssessment() {
     }
   };
 
-  const handleShowResults = () => {
-    transition(() => setScreen(assessmentType === "deep" ? "deep-result" : "result"));
+  const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [reminderSet, setReminderSet] = useState(false);
+  const handleDownloadPdf = () => {
+    const el = document.getElementById("pdf-content");
+    if (!el || typeof html2pdf === "undefined") return;
+    setPdfGenerating(true);
+    const name = firstName || "Assessment";
+    html2pdf().set({
+      margin: [10, 10, 10, 10],
+      filename: "TAL-Assessment-" + name + ".pdf",
+      image: { type: "jpeg", quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: "#1C1C1C" },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    }).from(el).save().then(() => setPdfGenerating(false)).catch(() => setPdfGenerating(false));
   };
+
+  const handleSetReminder = () => {
+    const remindAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
+    fetch(API_BASE + "/api/reminder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, assessmentId, remindAt }),
+    }).catch(err => console.warn("Reminder failed:", err));
+    setReminderSet(true);
+  };
+
+  const reminderDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
   const level = result ? result.level : null;
   const res = level ? results[level] : null;
-  const congratsLevel = assessmentType === "deep" ? (deepResult ? deepResult.overallLevel : null) : level;
-  const congratsRes = congratsLevel ? results[congratsLevel] : null;
   const deepLevel = deepResult ? deepResult.overallLevel : null;
   const deepRes = deepLevel ? results[deepLevel] : null;
 
@@ -1297,6 +1372,19 @@ function SelfAssessment() {
                 <span>{currentQ.notYet}</span>
               </button>
             </div>
+            {answers.length > 0 && (
+              <button onClick={handleGoBack} style={{
+                background: "transparent", border: "none", color: BRAND.gray,
+                fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.8rem",
+                cursor: "pointer", marginTop: "1.5rem", padding: "0.5rem 0",
+                letterSpacing: "0.05em", transition: "color 0.2s",
+              }}
+              onMouseOver={function(e) { e.currentTarget.style.color = BRAND.offWhite; }}
+              onMouseOut={function(e) { e.currentTarget.style.color = BRAND.gray; }}
+              >
+                ← Previous question
+              </button>
+            )}
           </div>
         )}
 
@@ -1337,6 +1425,19 @@ function SelfAssessment() {
                 </button>
               ))}
             </div>
+            {deepAnswers.length > 0 && (
+              <button onClick={handleDeepGoBack} style={{
+                background: "transparent", border: "none", color: BRAND.gray,
+                fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.8rem",
+                cursor: "pointer", marginTop: "1.5rem", padding: "0.5rem 0",
+                letterSpacing: "0.05em", transition: "color 0.2s",
+              }}
+              onMouseOver={function(e) { e.currentTarget.style.color = BRAND.offWhite; }}
+              onMouseOut={function(e) { e.currentTarget.style.color = BRAND.gray; }}
+              >
+                ← Previous question
+              </button>
+            )}
           </div>
         )}
 
@@ -1386,6 +1487,9 @@ function SelfAssessment() {
                   fontFamily: "'DM Sans', sans-serif", outline: "none"
                 }}
               />
+              <p style={{ fontSize: "0.8rem", color: BRAND.gray, lineHeight: 1.6, marginBottom: "1.5rem", textAlign: "left" }}>
+                We'll send your full diagnostic breakdown and a personalized playbook to this address. No spam. Unsubscribe anytime.
+              </p>
               <button type="submit" className="btn-gold" style={{ width: "100%" }}>
                 Reveal My Result →
               </button>
@@ -1393,46 +1497,42 @@ function SelfAssessment() {
           </div>
         )}
 
-        {/* ── CONGRATULATIONS ── */}
-        {screen === "congrats" && congratsRes && (
-          <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 700, width: "100%", textAlign: "center" }}>
-            <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", letterSpacing: "0.25em", fontWeight: 700, color: BRAND.teal, textTransform: "uppercase", marginBottom: "1.5rem" }}>
-              Your Result
-            </div>
-            <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 800, lineHeight: 1.2, marginBottom: "2rem", color: BRAND.offWhite }}>
-              {congratsRes.label}
-            </h1>
-            <div style={{ fontSize: "1.05rem", color: BRAND.lightGray, lineHeight: 1.85, textAlign: "left", whiteSpace: "pre-wrap", marginBottom: "3rem" }}>
-              {congratsRes.body}
-            </div>
-            <button className="btn-gold" onClick={handleShowResults}>
-              See Your Complete Results →
-            </button>
-          </div>
-        )}
-
         {/* ── QUICK RESULT SCREEN ── */}
         {screen === "result" && result && res && (
           <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 760, width: "100%", textAlign: "left" }}>
 
-            <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+            <SectionNav sections={[
+              { id: "q-result", label: "Result" },
+              { id: "q-signals", label: "Signals" },
+              { id: "q-playbook", label: "Playbook" },
+              { id: "q-next", label: "Next Move" },
+            ]} />
+
+            <div id="q-result" style={{ textAlign: "center", marginBottom: "4rem" }}>
               <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", letterSpacing: "0.25em", fontWeight: 700, color: BRAND.teal, textTransform: "uppercase", marginBottom: "1.25rem" }}>
                 Your Final Diagnosis
               </div>
               <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 800, lineHeight: 1.1, marginBottom: "1.5rem" }}>
                 {res.label}
               </h1>
-              <p style={{ fontSize: "1.1rem", color: BRAND.gray, lineHeight: 1.75, maxWidth: 600, margin: "0 auto" }}>
-                We've also sent this breakdown to <span style={{ color: BRAND.offWhite }}>{email}</span>.
+              <div style={{ fontSize: "1.05rem", color: BRAND.lightGray, lineHeight: 1.85, maxWidth: 600, margin: "0 auto", whiteSpace: "pre-wrap", marginBottom: "1rem" }}>
+                {res.body}
+              </div>
+              <p style={{ fontSize: "0.85rem", color: BRAND.gray, lineHeight: 1.6, maxWidth: 500, margin: "0 auto" }}>
+                Results for <span style={{ color: BRAND.offWhite }}>{firstName || email}</span>
               </p>
+              <button onClick={handleDownloadPdf} disabled={pdfGenerating} className="btn-ghost" style={{ marginTop: "1.5rem", padding: "0.7rem 1.5rem", fontSize: "0.7rem" }}>
+                {pdfGenerating ? "Generating..." : "Download PDF ↓"}
+              </button>
             </div>
 
+            <div id="pdf-content">
             <div style={{ background: "linear-gradient(180deg, rgba(27,58,92,0.1) 0%, transparent 100%)", padding: "3rem", border: "1px solid rgba(46,109,164,0.15)", borderRadius: "4px", marginBottom: "4rem" }}>
               <CategoryBreakdown categoryScores={result.categoryScores} />
 
               {/* ── P-SIGNAL GRID ── */}
               {result.pSignals && (
-                <div style={{ marginTop: "2.5rem", paddingTop: "2rem", borderTop: "1px solid rgba(138,155,176,0.15)" }}>
+                <div id="q-signals" style={{ marginTop: "2.5rem", paddingTop: "2rem", borderTop: "1px solid rgba(138,155,176,0.15)" }}>
                   <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.paleTeal, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "1rem" }}>
                     9P Signal Check
                   </div>
@@ -1451,12 +1551,13 @@ function SelfAssessment() {
                     })}
                   </div>
                   <p style={{ fontSize: "0.75rem", color: BRAND.gray, marginTop: "1rem", lineHeight: 1.5, fontStyle: "italic" }}>
-                    These are directional signals from 12 questions. The In-Depth Assessment gives a precise level (1–7) for each P.
+                    These are directional signals from 12 questions. Profit is only measured in the In-Depth Assessment, which gives a precise level (1–7) for every P.
                   </p>
                 </div>
               )}
 
               {/* ── PLAYBOOK SECTION ── */}
+              <div id="q-playbook" />
               {(() => {
                 // Find the weakest category and map it to a primary P
                 const categoryToPrimary = {
@@ -1486,7 +1587,7 @@ function SelfAssessment() {
                 );
               })()}
 
-              <div style={{ marginTop: "2rem", paddingTop: "2rem", borderTop: "1px solid rgba(138,155,176,0.15)" }}>
+              <div id="q-next" style={{ marginTop: "2rem", paddingTop: "2rem", borderTop: "1px solid rgba(138,155,176,0.15)" }}>
                 <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.paleTeal, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "1rem" }}>
                   The Next Move
                 </div>
@@ -1529,6 +1630,24 @@ function SelfAssessment() {
               )}
             </div>
 
+            <div style={{ textAlign: "center", padding: "2rem 0", borderTop: "1px solid rgba(138,155,176,0.08)", marginTop: "2rem" }}>
+              {!reminderSet ? (
+                <div>
+                  <p style={{ fontSize: "0.9rem", color: BRAND.gray, marginBottom: "1rem", lineHeight: 1.6 }}>
+                    Want to track your growth? Retake the assessment in 90 days and compare.
+                  </p>
+                  <button onClick={handleSetReminder} className="btn-ghost" style={{ padding: "0.7rem 1.5rem", fontSize: "0.7rem" }}>
+                    Remind me on {reminderDate}
+                  </button>
+                </div>
+              ) : (
+                <p style={{ fontSize: "0.9rem", color: BRAND.teal, lineHeight: 1.6 }}>
+                  Done. We'll send a reminder to <span style={{ color: BRAND.offWhite }}>{email}</span> on {reminderDate}.
+                </p>
+              )}
+            </div>
+            </div>{/* close pdf-content */}
+
           </div>
         )}
 
@@ -1536,18 +1655,33 @@ function SelfAssessment() {
         {screen === "deep-result" && deepResult && deepRes && (
           <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 820, width: "100%", textAlign: "left" }}>
 
-            <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+            <SectionNav sections={[
+              { id: "d-profile", label: "Profile" },
+              { id: "d-constraint", label: "Constraint" },
+              { id: "d-breakdown", label: "Breakdown" },
+              { id: "d-playbook", label: "Playbook" },
+              { id: "d-next", label: "Next Move" },
+            ]} />
+
+            <div id="d-profile" style={{ textAlign: "center", marginBottom: "3rem" }}>
               <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", letterSpacing: "0.25em", fontWeight: 700, color: BRAND.teal, textTransform: "uppercase", marginBottom: "1.25rem" }}>
                 Your Complete 9P Profile
               </div>
               <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(2.2rem, 4.5vw, 3.5rem)", fontWeight: 800, lineHeight: 1.1, marginBottom: "1rem" }}>
                 {deepRes.label}
               </h1>
-              <p style={{ fontSize: "1rem", color: BRAND.gray, lineHeight: 1.6, maxWidth: 500, margin: "0 auto" }}>
-                Your business is as strong as its weakest P. We've sent the full breakdown to <span style={{ color: BRAND.offWhite }}>{email}</span>.
+              <div style={{ fontSize: "1.05rem", color: BRAND.lightGray, lineHeight: 1.85, maxWidth: 600, margin: "0 auto 1rem", whiteSpace: "pre-wrap" }}>
+                {deepRes.body}
+              </div>
+              <p style={{ fontSize: "0.85rem", color: BRAND.gray, lineHeight: 1.6, maxWidth: 500, margin: "0 auto" }}>
+                Your business is as strong as its weakest P. Results for <span style={{ color: BRAND.offWhite }}>{firstName || email}</span>.
               </p>
+              <button onClick={handleDownloadPdf} disabled={pdfGenerating} className="btn-ghost" style={{ marginTop: "1.5rem", padding: "0.7rem 1.5rem", fontSize: "0.7rem" }}>
+                {pdfGenerating ? "Generating..." : "Download PDF ↓"}
+              </button>
             </div>
 
+            <div id="pdf-content">
             <div style={{ marginBottom: "3rem" }}>
               <BrandMarkChart
                 pLevels={deepResult.pLevels}
@@ -1556,7 +1690,7 @@ function SelfAssessment() {
               />
             </div>
 
-            <div className="cs-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "3rem" }}>
+            <div id="d-constraint" className="cs-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "3rem" }}>
               <div style={{ background: BRAND.dark2, padding: "2rem", borderRadius: "4px", border: "1px solid rgba(255, 90, 95, 0.2)" }}>
                 <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.coral, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
                   Primary Constraint
@@ -1588,7 +1722,7 @@ function SelfAssessment() {
               </div>
             </div>
 
-            <div style={{ background: "linear-gradient(180deg, rgba(15,156,172,0.06) 0%, transparent 100%)", padding: "2.5rem", border: "1px solid rgba(15,156,172,0.15)", borderRadius: "4px", marginBottom: "3rem" }}>
+            <div id="d-next" style={{ background: "linear-gradient(180deg, rgba(15,156,172,0.06) 0%, transparent 100%)", padding: "2.5rem", border: "1px solid rgba(15,156,172,0.15)", borderRadius: "4px", marginBottom: "3rem" }}>
               <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.paleTeal, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
                 The Next Move
               </div>
@@ -1600,7 +1734,7 @@ function SelfAssessment() {
               </button>
             </div>
 
-            <div style={{ background: BRAND.dark2, padding: "2.5rem", borderRadius: "4px", border: "1px solid rgba(138,155,176,0.1)", marginBottom: "3rem" }}>
+            <div id="d-breakdown" style={{ background: BRAND.dark2, padding: "2.5rem", borderRadius: "4px", border: "1px solid rgba(138,155,176,0.1)", marginBottom: "3rem" }}>
               <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.gray, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "1.5rem" }}>
                 Complete 9P Breakdown
               </div>
@@ -1623,12 +1757,12 @@ function SelfAssessment() {
                         }}
                       >
                         <span style={{
-                          fontSize: "1rem", color: BRAND.teal, fontWeight: 700,
+                          fontSize: "0.85rem", color: BRAND.teal, fontWeight: 700,
                           width: "1.2rem", textAlign: "center", flexShrink: 0,
-                          transition: "transform 0.2s", display: "inline-block",
+                          transition: "transform 0.15s ease", display: "inline-block",
                           transform: isExpanded ? "rotate(90deg)" : "none",
                         }}>
-                          +
+                          {isExpanded ? "▾" : "›"}
                         </span>
                         <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "1rem", color: BRAND.offWhite, fontWeight: 500, flexGrow: 1, textAlign: "left", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {pName}
@@ -1695,7 +1829,7 @@ function SelfAssessment() {
               const superpowerP = deepResult.superpower;
               const superpowerLevel = deepResult.pLevels[superpowerP];
               return (
-                <div style={{ background: "rgba(8,126,139,0.06)", border: "1px solid rgba(8,126,139,0.2)", borderRadius: "6px", padding: "2.5rem", marginBottom: "3rem" }}>
+                <div id="d-playbook" style={{ background: "rgba(8,126,139,0.06)", border: "1px solid rgba(8,126,139,0.2)", borderRadius: "6px", padding: "2.5rem", marginBottom: "3rem" }}>
                   <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.teal, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "0.75rem", fontWeight: 700 }}>
                     Your Playbook This Week
                   </div>
@@ -1746,6 +1880,24 @@ function SelfAssessment() {
                 </div>
               )}
             </div>
+
+            <div style={{ textAlign: "center", padding: "2rem 0", borderTop: "1px solid rgba(138,155,176,0.08)", marginTop: "2rem" }}>
+              {!reminderSet ? (
+                <div>
+                  <p style={{ fontSize: "0.9rem", color: BRAND.gray, marginBottom: "1rem", lineHeight: 1.6 }}>
+                    Want to track your growth? Retake the assessment in 90 days and compare.
+                  </p>
+                  <button onClick={handleSetReminder} className="btn-ghost" style={{ padding: "0.7rem 1.5rem", fontSize: "0.7rem" }}>
+                    Remind me on {reminderDate}
+                  </button>
+                </div>
+              ) : (
+                <p style={{ fontSize: "0.9rem", color: BRAND.teal, lineHeight: 1.6 }}>
+                  Done. We'll send a reminder to <span style={{ color: BRAND.offWhite }}>{email}</span> on {reminderDate}.
+                </p>
+              )}
+            </div>
+            </div>{/* close pdf-content */}
 
           </div>
         )}

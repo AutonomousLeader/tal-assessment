@@ -66,6 +66,21 @@ function createRepository(db) {
     return getUnsyncedStmt.all();
   }
 
+  const insertReminderStmt = db.prepare(`
+    INSERT INTO reminders (email, assessment_id, remind_at)
+    VALUES (@email, @assessmentId, @remindAt)
+  `);
+
+  function insertReminder(data) {
+    const params = {
+      email: data.email,
+      assessmentId: data.assessmentId ?? null,
+      remindAt: data.remindAt,
+    };
+    const result = insertReminderStmt.run(params);
+    return result.lastInsertRowid;
+  }
+
   return {
     insertAssessment,
     flagAssessment,
@@ -73,6 +88,7 @@ function createRepository(db) {
     incrementCounter,
     markKitSynced,
     getUnsyncedAssessments,
+    insertReminder,
   };
 }
 

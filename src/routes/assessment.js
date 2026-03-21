@@ -185,6 +185,27 @@ function createRoutes(repo) {
     res.json({ success: true });
   });
 
+  // POST /api/reminder — 90-day retake reminder
+  router.post("/reminder", (req, res) => {
+    const { email, assessmentId, remindAt } = req.body;
+
+    if (!email || typeof email !== "string" || !/^.+@.+\..+$/.test(email)) {
+      return res.status(400).json({ success: false, errors: ["Invalid email."] });
+    }
+
+    if (!remindAt || isNaN(Date.parse(remindAt))) {
+      return res.status(400).json({ success: false, errors: ["Invalid remindAt date."] });
+    }
+
+    const id = repo.insertReminder({
+      email,
+      assessmentId: assessmentId ? Number(assessmentId) : null,
+      remindAt,
+    });
+
+    res.json({ success: true, data: { id: Number(id) } });
+  });
+
   return router;
 }
 
