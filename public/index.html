@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TAL Self Assessment Demo</title>
 
-    <!-- React and ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <!-- Babel -->
+    <!-- React and ReactDOM (production builds — smaller, faster) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel (JSX transpilation) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,7 +32,7 @@
         const { useState, useEffect } = React;
 
 // ─── API CONFIGURATION ──────────────────────────────────────────────────────
-const API_BASE = ""; // Same-origin — frontend and API served from one server
+const API_BASE = "";
 
 const BRAND = {
   dark: "#1C1C1C",
@@ -418,88 +418,88 @@ const P_LEVEL_UNLOCK = {
   Power: [null, "Identify the three decisions you make most often and delegate one.", "Create a decision authority matrix: what they can decide without you.", "Give a leader full authority over one domain — and let them use it.", "Map every decision type and assign clear ownership to the right person.", "Transfer risk-bearing authority to leaders and resist pulling it back.", "Trust the distribution and step back from operational authority.", "Maintain and refine the decision-making structure."],
 };
 
-// ─── SOLUTION LONG — "The ONE Thing" actionable playbook per P per level ────
+// ─── SOLUTION LONG — actionable playbook per P per level ────────────────────
 const SOLUTION_LONG = {
   Pipeline: {
-    1: "The ONE Thing at Level 1 is building one intentional referral ask — a specific, repeatable request the founder makes to their best clients at a defined moment in the relationship. Not a marketing plan. Not a CRM. One ask, practiced and tracked. When this happens, the founder discovers something that changes everything: new business can be requested, not just hoped for.",
-    2: "The ONE Thing at Level 2 is choosing one lead source to build deliberately — not hoping existing word of mouth continues, but identifying the channel that best matches how clients find and trust this business, and investing in it intentionally. The experience of deliberately building one source — even at modest scale — changes what the founder believes is possible.",
-    3: "The ONE Thing at Level 3 is systematizing the close — writing the two or three objections that appear in nearly every deal, scripting honest language to handle each one, and training that language to whoever sits with prospects first. The first deal that closes without the founder in the room changes everything: it proves the close was not about personality, it was about process.",
-    4: "The ONE Thing at Level 4 is stress-testing the front end — deliberately removing founder involvement from the conversion process for a defined period and observing where it holds and where it breaks. The breaks reveal the exact dependencies that create fragility. Fixing those dependencies one by one creates a front end that holds without any specific person's attention.",
-    5: "The ONE Thing at Level 5 is transferring the close to the team — building the full conversion system, training the team to run it, then stepping back from the close entirely for a defined test period. The founder's calendar stops being the ceiling on deal volume. For the first time, the pipeline can operate at full capacity without being gated by one person's availability.",
-    6: "The ONE Thing at Level 6 is assigning pipeline calibration to one named owner — a person whose job includes monitoring performance indicators, identifying when something is off, and making the adjustment. The pipeline no longer needs the founder to watch it, notice problems, or intervene. It has its own nervous system.",
-    7: "The ONE Thing at Level 7 is setting the channel allocation deliberately — choosing which channels to invest in, at what level, toward what strategic objective, for the next twelve months. Demand stops being a product of momentum and becomes a product of strategy.",
+    1: "The key move at Level 1 is building one intentional referral ask — a specific, repeatable request the founder makes to their best clients at a defined moment in the relationship. Not a marketing plan. Not a CRM. One ask, practiced and tracked. When this happens, the founder discovers something that changes everything: new business can be requested, not just hoped for.",
+    2: "The key move at Level 2 is choosing one lead source to build deliberately — not hoping existing word of mouth continues, but identifying the channel that best matches how clients find and trust this business, and investing in it intentionally. The experience of deliberately building one source — even at modest scale — changes what the founder believes is possible.",
+    3: "The key move at Level 3 is systematizing the close — writing the two or three objections that appear in nearly every deal, scripting honest language to handle each one, and training that language to whoever sits with prospects first. The first deal that closes without the founder in the room changes everything: it proves the close was not about personality, it was about process.",
+    4: "The key move at Level 4 is stress-testing the front end — deliberately removing founder involvement from the conversion process for a defined period and observing where it holds and where it breaks. The breaks reveal the exact dependencies that create fragility. Fixing those dependencies one by one creates a front end that holds without any specific person's attention.",
+    5: "The key move at Level 5 is transferring the close to the team — building the full conversion system, training the team to run it, then stepping back from the close entirely for a defined test period. The founder's calendar stops being the ceiling on deal volume. For the first time, the pipeline can operate at full capacity without being gated by one person's availability.",
+    6: "The key move at Level 6 is assigning pipeline calibration to one named owner — a person whose job includes monitoring performance indicators, identifying when something is off, and making the adjustment. The pipeline no longer needs the founder to watch it, notice problems, or intervene. It has its own nervous system.",
+    7: "The key move at Level 7 is setting the channel allocation deliberately — choosing which channels to invest in, at what level, toward what strategic objective, for the next twelve months. Demand stops being a product of momentum and becomes a product of strategy.",
   },
   Profit: {
-    1: "The ONE Thing at Level 1 is calculating the true cost of the most-sold service — not estimated, not assumed, but actually calculated: loaded labor hours, materials, overhead allocation, and the time that never appears on invoices. When this number is known for the first time, the founder has a floor. Pricing above it is a choice. Pricing below it is invisible subsidization.",
-    2: "The ONE Thing at Level 2 is running a job-level margin report — pulling every engagement from the last quarter, what it billed, what it actually cost in real labor and overhead, and what it returned. Almost always, two or three categories are generating most of the real return and at least one is generating almost none. That clarity is the domino.",
-    3: "The ONE Thing at Level 3 is naming the most profitable offer — identifying by margin data which specific service, client type, or delivery structure returns the most per unit of effort. They can price future work against what the best work returns, shift capacity away from margin-thin categories, and build the sales conversation around the offer that actually sustains the business.",
-    4: "The ONE Thing at Level 4 is building the 13-week cash model — a forward projection of inflows and outflows based on current contracts, historical payment timing, and known obligations. Every cash crunch they would have been surprised by now shows up as a solvable problem three weeks early. One model, maintained weekly, eliminates the entire category of financial surprises.",
-    5: "The ONE Thing at Level 5 is connecting each financial report to a specific decision trigger. Not just reviewing the margin report — but defining: if margin drops below X, this action fires. If cash forecast shows Y, this decision is made. The data no longer needs to be interpreted — it produces actions according to pre-defined criteria.",
-    6: "The ONE Thing at Level 6 is writing the capital allocation policy — a document that defines, in advance, how excess capital is deployed: a defined percentage to reserves, a defined percentage to growth reinvestment, a defined percentage to distribution. Capital without a deployment framework is not safety — it is delayed compounding.",
-    7: "The ONE Thing at Level 7 is writing the capital deployment strategy — a forward-looking document that answers specifically: where does capital go over the next 18 months, toward what strategic objective, at what investment level? Capital stops accumulating passively and starts working intentionally.",
+    1: "The key move at Level 1 is calculating the true cost of the most-sold service — not estimated, not assumed, but actually calculated: loaded labor hours, materials, overhead allocation, and the time that never appears on invoices. When this number is known for the first time, the founder has a floor. Pricing above it is a choice. Pricing below it is invisible subsidization.",
+    2: "The key move at Level 2 is running a job-level margin report — pulling every engagement from the last quarter, what it billed, what it actually cost in real labor and overhead, and what it returned. Almost always, two or three categories are generating most of the real return and at least one is generating almost none. That clarity is the domino.",
+    3: "The key move at Level 3 is naming the most profitable offer — identifying by margin data which specific service, client type, or delivery structure returns the most per unit of effort. They can price future work against what the best work returns, shift capacity away from margin-thin categories, and build the sales conversation around the offer that actually sustains the business.",
+    4: "The key move at Level 4 is building the 13-week cash model — a forward projection of inflows and outflows based on current contracts, historical payment timing, and known obligations. Every cash crunch they would have been surprised by now shows up as a solvable problem three weeks early. One model, maintained weekly, eliminates the entire category of financial surprises.",
+    5: "The key move at Level 5 is connecting each financial report to a specific decision trigger. Not just reviewing the margin report — but defining: if margin drops below X, this action fires. If cash forecast shows Y, this decision is made. The data no longer needs to be interpreted — it produces actions according to pre-defined criteria.",
+    6: "The key move at Level 6 is writing the capital allocation policy — a document that defines, in advance, how excess capital is deployed: a defined percentage to reserves, a defined percentage to growth reinvestment, a defined percentage to distribution. Capital without a deployment framework is not safety — it is delayed compounding.",
+    7: "The key move at Level 7 is writing the capital deployment strategy — a forward-looking document that answers specifically: where does capital go over the next 18 months, toward what strategic objective, at what investment level? Capital stops accumulating passively and starts working intentionally.",
   },
   Perspective: {
-    1: "The ONE Thing at Level 1 is writing the standard — getting it out of the founder's head and onto paper. The five to eight specific, observable things that would tell any reasonable person whether a given piece of work meets the standard or not. You cannot trust what you have not defined. Define it first.",
-    2: "The ONE Thing at Level 2 is letting one outcome land without reviewing it — choosing one category of work, designating it as fully owned by the team, and not looking at the output before it reaches the client. That experience is the proof of concept for trust. Not philosophical trust — demonstrated trust, built from the specific experience of letting go and finding out the team handled it.",
-    3: "The ONE Thing at Level 3 is removing yourself from one specific review category permanently and communicating the removal clearly to the team. Not 'I don't need to see this every time' — but 'this category is yours; I am not in the loop on it.' The team stops calibrating to founder approval and starts calibrating to the standard.",
-    4: "The ONE Thing at Level 4 is transferring system design authority to the team — explicitly giving the people who run each domain the authority to design, modify, and own the systems in that domain without requiring founder approval. The founder's role shifts from system designer to system evaluator.",
-    5: "The ONE Thing at Level 5 is defining your new value proposition — not to the market, but to yourself. What do you contribute that no one else in this organization can? For most founders at this level, the genuine answer involves vision, relationships, and the development of the leaders around them.",
-    6: "The ONE Thing at Level 6 is naming the next thing you are building. Not vaguely — specifically enough to describe to someone else in three sentences. A new category. A portfolio. A teaching platform. A second business. One named next direction turns optionality from comfortable ambiguity into actual forward momentum.",
-    7: "The ONE Thing at Level 7 is the decision itself — choosing one direction for the next chapter and committing to it. Not studying options indefinitely. Not staying open to whatever emerges. Choosing. One committed direction, stated clearly, is the one thing that turns Level 7 from an impressive achievement into the beginning of something new.",
+    1: "The key move at Level 1 is writing the standard — getting it out of the founder's head and onto paper. The five to eight specific, observable things that would tell any reasonable person whether a given piece of work meets the standard or not. You cannot trust what you have not defined. Define it first.",
+    2: "The key move at Level 2 is letting one outcome land without reviewing it — choosing one category of work, designating it as fully owned by the team, and not looking at the output before it reaches the client. That experience is the proof of concept for trust. Not philosophical trust — demonstrated trust, built from the specific experience of letting go and finding out the team handled it.",
+    3: "The key move at Level 3 is removing yourself from one specific review category permanently and communicating the removal clearly to the team. Not 'I don't need to see this every time' — but 'this category is yours; I am not in the loop on it.' The team stops calibrating to founder approval and starts calibrating to the standard.",
+    4: "The key move at Level 4 is transferring system design authority to the team — explicitly giving the people who run each domain the authority to design, modify, and own the systems in that domain without requiring founder approval. The founder's role shifts from system designer to system evaluator.",
+    5: "The key move at Level 5 is defining your new value proposition — not to the market, but to yourself. What do you contribute that no one else in this organization can? For most founders at this level, the genuine answer involves vision, relationships, and the development of the leaders around them.",
+    6: "The key move at Level 6 is naming the next thing you are building. Not vaguely — specifically enough to describe to someone else in three sentences. A new category. A portfolio. A teaching platform. A second business. One named next direction turns optionality from comfortable ambiguity into actual forward momentum.",
+    7: "The key move at Level 7 is the decision itself — choosing one direction for the next chapter and committing to it. Not studying options indefinitely. Not staying open to whatever emerges. Choosing. One committed direction, stated clearly, is the one thing that turns Level 7 from an impressive achievement into the beginning of something new.",
   },
   Principles: {
-    1: "The ONE Thing at Level 1 is naming one standard in specific, testable language — not 'we do great work' but the four or five observable things that would tell any reasonable person whether a specific output meets the standard or not. That single naming is the first domino in building a culture that does not require the founder's constant presence to maintain its quality.",
-    2: "The ONE Thing at Level 2 is writing what 'right' looks like for one category of recurring decisions — not values language, but practical decision guidance specific enough to act on without asking. The first time a team member makes a good call using the written standard rather than asking the founder, something changes in both directions.",
-    3: "The ONE Thing at Level 3 is putting the principles somewhere the team consults before making a decision — not after, not in retrospect, but in the moment of ambiguity. When the team starts consulting the principles before escalating to the founder, the founder's involvement in gray-area decisions begins to drop.",
-    4: "The ONE Thing at Level 4 is embedding one principle into one concrete hiring or performance criterion — a specific, evaluable criterion tied to a specific principle. Principles that affect personnel decisions are real. Principles that do not are aspirational.",
-    5: "The ONE Thing at Level 5 is building a culture onboarding — a designed experience that transmits the principles to every new hire through a structured process. When this transmission system exists, the culture becomes portable: it travels to new team members through the process rather than through the founder's personal reach.",
-    6: "The ONE Thing at Level 6 is stating the principles externally — making visible to the outside world what the organization actually stands for, in language that means something to the people you most want to work with or hire. The principles begin working as a pre-filter: attracting aligned clients and talent before any conversation happens.",
-    7: "The ONE Thing at Level 7 is building one governance structure that carries the culture without the founder — a decision framework, a governance criterion, or a succession standard that embeds the principles into the institutional structure. One structural embedding converts a founder-dependent culture into an institution.",
+    1: "The key move at Level 1 is naming one standard in specific, testable language — not 'we do great work' but the four or five observable things that would tell any reasonable person whether a specific output meets the standard or not. That single naming is the first domino in building a culture that does not require the founder's constant presence to maintain its quality.",
+    2: "The key move at Level 2 is writing what 'right' looks like for one category of recurring decisions — not values language, but practical decision guidance specific enough to act on without asking. The first time a team member makes a good call using the written standard rather than asking the founder, something changes in both directions.",
+    3: "The key move at Level 3 is putting the principles somewhere the team consults before making a decision — not after, not in retrospect, but in the moment of ambiguity. When the team starts consulting the principles before escalating to the founder, the founder's involvement in gray-area decisions begins to drop.",
+    4: "The key move at Level 4 is embedding one principle into one concrete hiring or performance criterion — a specific, evaluable criterion tied to a specific principle. Principles that affect personnel decisions are real. Principles that do not are aspirational.",
+    5: "The key move at Level 5 is building a culture onboarding — a designed experience that transmits the principles to every new hire through a structured process. When this transmission system exists, the culture becomes portable: it travels to new team members through the process rather than through the founder's personal reach.",
+    6: "The key move at Level 6 is stating the principles externally — making visible to the outside world what the organization actually stands for, in language that means something to the people you most want to work with or hire. The principles begin working as a pre-filter: attracting aligned clients and talent before any conversation happens.",
+    7: "The key move at Level 7 is building one governance structure that carries the culture without the founder — a decision framework, a governance criterion, or a succession standard that embeds the principles into the institutional structure. One structural embedding converts a founder-dependent culture into an institution.",
   },
   Program: {
-    1: "The ONE Thing at Level 1 is automating the single most repeated task in the business — the thing that happens most often and is currently done entirely manually. One connection between two tools. One template that eliminates manual formatting. One trigger that fires a task automatically. That experience changes what the founder believes about where their time goes and what is possible.",
-    2: "The ONE Thing at Level 2 is connecting the two most-used tools — creating a data flow between the systems the team uses most so that information entered in one appears automatically in the other. The question shifts from 'how do I manage this' to 'how do I connect this.'",
-    3: "The ONE Thing at Level 3 is designating one person as owner of the technology stack — giving them explicit responsibility for evaluating the current tools, maintaining the integrations, removing what does not serve, and adding what is needed. The rest of the team stops having to think about the tools because one person is thinking about them on everyone's behalf.",
-    4: "The ONE Thing at Level 4 is integrating the core systems — building the central data flow that connects the business's primary tools so that information moves automatically between them. Reports assemble themselves. Status is visible without checking multiple places. The hours previously spent on manual synchronization become available for higher-leverage work.",
-    5: "The ONE Thing at Level 5 is building one proprietary automation — a custom workflow, delivery capability, or client-facing system designed specifically around how this business operates. Proprietary process encoded in technology is a form of competitive protection that a competitor using standard tools cannot easily replicate.",
-    6: "The ONE Thing at Level 6 is writing a technology roadmap — a twelve-month plan for what the technology layer needs to build, upgrade, and integrate to support the business's strategic priorities. Technology stops being reactive and starts being anticipatory.",
-    7: "The ONE Thing at Level 7 is identifying and building the technology moat — the specific system, data asset, or delivery capability that would be genuinely difficult for a well-resourced competitor to replicate. The technology layer stops being infrastructure and becomes defensibility.",
+    1: "The key move at Level 1 is automating the single most repeated task in the business — the thing that happens most often and is currently done entirely manually. One connection between two tools. One template that eliminates manual formatting. One trigger that fires a task automatically. That experience changes what the founder believes about where their time goes and what is possible.",
+    2: "The key move at Level 2 is connecting the two most-used tools — creating a data flow between the systems the team uses most so that information entered in one appears automatically in the other. The question shifts from 'how do I manage this' to 'how do I connect this.'",
+    3: "The key move at Level 3 is designating one person as owner of the technology stack — giving them explicit responsibility for evaluating the current tools, maintaining the integrations, removing what does not serve, and adding what is needed. The rest of the team stops having to think about the tools because one person is thinking about them on everyone's behalf.",
+    4: "The key move at Level 4 is integrating the core systems — building the central data flow that connects the business's primary tools so that information moves automatically between them. Reports assemble themselves. Status is visible without checking multiple places. The hours previously spent on manual synchronization become available for higher-leverage work.",
+    5: "The key move at Level 5 is building one proprietary automation — a custom workflow, delivery capability, or client-facing system designed specifically around how this business operates. Proprietary process encoded in technology is a form of competitive protection that a competitor using standard tools cannot easily replicate.",
+    6: "The key move at Level 6 is writing a technology roadmap — a twelve-month plan for what the technology layer needs to build, upgrade, and integrate to support the business's strategic priorities. Technology stops being reactive and starts being anticipatory.",
+    7: "The key move at Level 7 is identifying and building the technology moat — the specific system, data asset, or delivery capability that would be genuinely difficult for a well-resourced competitor to replicate. The technology layer stops being infrastructure and becomes defensibility.",
   },
   People: {
-    1: "The ONE Thing at Level 1 is defining the highest-leverage hire — not the most annoying tasks to offload, but the specific category of work that, if removed from the founder's plate, would most directly unlock the founder's ability to grow the business. One clear seat definition is the domino that determines whether the business gets a leverage hire or a convenience hire.",
-    2: "The ONE Thing at Level 2 is repositioning the first hire against the actual growth bottleneck rather than the most convenient gap to fill. What category of work, if removed from your schedule, would most change what you can build? Position the hire there. That is the leverage hire. It pays back differently than a support hire.",
-    3: "The ONE Thing at Level 3 is giving the team authority over one complete outcome — not 'help with' but 'owns, start to finish, and the result is theirs.' One fully transferred outcome — produced, delivered, and not adjusted by the founder afterward — converts a team trained to ask into a team trained to own.",
-    4: "The ONE Thing at Level 4 is defining and filling one leadership seat — a role with real decision rights, real accountability for a domain, and real consequences for outcomes. Not a title promotion. A seat with authority. One real leadership seat changes what the rest of the team believes is possible.",
-    5: "The ONE Thing at Level 5 is transferring complete decision rights to each leader's domain — not informally but explicitly. Not 'use your judgment' but 'this category of decisions is yours, here are the criteria, here is how it gets reviewed.' The difference in speed, morale, and decision quality between a leadership team with real authority and one that manages up is profound.",
-    6: "The ONE Thing at Level 6 is designing the internal leadership development track — a defined sequence of increasing responsibilities, decision rights, and performance standards. When this track exists, high performers can see a path forward inside the organization. Leadership capacity grows through compounding internal investment.",
-    7: "The ONE Thing at Level 7 is writing the succession plan for the top three roles. Not because succession is imminent — because the act of writing it reveals exactly where the organization is fragile. That map of fragility tells the organization where to invest in institutional resilience.",
+    1: "The key move at Level 1 is defining the highest-leverage hire — not the most annoying tasks to offload, but the specific category of work that, if removed from the founder's plate, would most directly unlock the founder's ability to grow the business. One clear seat definition is the domino that determines whether the business gets a leverage hire or a convenience hire.",
+    2: "The key move at Level 2 is repositioning the first hire against the actual growth bottleneck rather than the most convenient gap to fill. What category of work, if removed from your schedule, would most change what you can build? Position the hire there. That is the leverage hire. It pays back differently than a support hire.",
+    3: "The key move at Level 3 is giving the team authority over one complete outcome — not 'help with' but 'owns, start to finish, and the result is theirs.' One fully transferred outcome — produced, delivered, and not adjusted by the founder afterward — converts a team trained to ask into a team trained to own.",
+    4: "The key move at Level 4 is defining and filling one leadership seat — a role with real decision rights, real accountability for a domain, and real consequences for outcomes. Not a title promotion. A seat with authority. One real leadership seat changes what the rest of the team believes is possible.",
+    5: "The key move at Level 5 is transferring complete decision rights to each leader's domain — not informally but explicitly. Not 'use your judgment' but 'this category of decisions is yours, here are the criteria, here is how it gets reviewed.' The difference in speed, morale, and decision quality between a leadership team with real authority and one that manages up is profound.",
+    6: "The key move at Level 6 is designing the internal leadership development track — a defined sequence of increasing responsibilities, decision rights, and performance standards. When this track exists, high performers can see a path forward inside the organization. Leadership capacity grows through compounding internal investment.",
+    7: "The key move at Level 7 is writing the succession plan for the top three roles. Not because succession is imminent — because the act of writing it reveals exactly where the organization is fragile. That map of fragility tells the organization where to invest in institutional resilience.",
   },
   Process: {
-    1: "The ONE Thing at Level 1 is writing the steps of the core service from start to finish — every step, in the order it happens, with enough specificity that someone who had not done it before would know what to do next. The work that felt like judgment and intuition is, in fact, a repeatable sequence that can be described. You cannot improve, delegate, or automate what has never been written down.",
-    2: "The ONE Thing at Level 2 is building one delivery checklist for the most common type of engagement — every step in sequence, with enough specificity that a team member could follow it and produce an acceptable outcome on a first attempt. That proof of concept — that a checklist can produce consistent delivery — makes building checklists for other engagement types feel worth the investment.",
-    3: "The ONE Thing at Level 3 is moving the process into the tool where the work actually happens. The steps become tasks. The tasks appear automatically when an engagement begins. The team cannot skip step four without marking step three complete. One process moved from document to tool demonstrates the difference between process as aspiration and process as operational reality.",
-    4: "The ONE Thing at Level 4 is auditing the documented process against actual practice — walking through the current documentation step by step, comparing it to how the work actually happens today, and updating every gap. Accurate documentation is a different tool than inaccurate documentation — and the first requires the audit.",
-    5: "The ONE Thing at Level 5 is installing a process update loop — a regular cadence where the team's operational learning is formally captured and incorporated into the documented process. The playbook improves at the rate the team learns rather than only when something breaks.",
-    6: "The ONE Thing at Level 6 is running one structured process innovation session — a dedicated block of time where the team asks: what would a fundamentally better version of this look like? Not what can be improved incrementally, but what could be redesigned. One innovation session that produces one genuinely better design demonstrates the difference between process maintenance and process leadership.",
-    7: "The ONE Thing at Level 7 is identifying what in the playbook is genuinely proprietary — the specific methods, sequences, or frameworks that produce outcomes a competitor could not easily replicate. One identified proprietary process element turns process maturity from operational infrastructure into competitive protection.",
+    1: "The key move at Level 1 is writing the steps of the core service from start to finish — every step, in the order it happens, with enough specificity that someone who had not done it before would know what to do next. The work that felt like judgment and intuition is, in fact, a repeatable sequence that can be described. You cannot improve, delegate, or automate what has never been written down.",
+    2: "The key move at Level 2 is building one delivery checklist for the most common type of engagement — every step in sequence, with enough specificity that a team member could follow it and produce an acceptable outcome on a first attempt. That proof of concept — that a checklist can produce consistent delivery — makes building checklists for other engagement types feel worth the investment.",
+    3: "The key move at Level 3 is moving the process into the tool where the work actually happens. The steps become tasks. The tasks appear automatically when an engagement begins. The team cannot skip step four without marking step three complete. One process moved from document to tool demonstrates the difference between process as aspiration and process as operational reality.",
+    4: "The key move at Level 4 is auditing the documented process against actual practice — walking through the current documentation step by step, comparing it to how the work actually happens today, and updating every gap. Accurate documentation is a different tool than inaccurate documentation — and the first requires the audit.",
+    5: "The key move at Level 5 is installing a process update loop — a regular cadence where the team's operational learning is formally captured and incorporated into the documented process. The playbook improves at the rate the team learns rather than only when something breaks.",
+    6: "The key move at Level 6 is running one structured process innovation session — a dedicated block of time where the team asks: what would a fundamentally better version of this look like? Not what can be improved incrementally, but what could be redesigned. One innovation session that produces one genuinely better design demonstrates the difference between process maintenance and process leadership.",
+    7: "The key move at Level 7 is identifying what in the playbook is genuinely proprietary — the specific methods, sequences, or frameworks that produce outcomes a competitor could not easily replicate. One identified proprietary process element turns process maturity from operational infrastructure into competitive protection.",
   },
   Progress: {
-    1: "The ONE Thing at Level 1 is picking three numbers and tracking them every week without exception — a pipeline number, a delivery number, and a financial number. The experience of having a number to look at — and noticing that the number is more reliable than the feeling — is the domino that makes building a real measurement system feel worth the effort.",
-    2: "The ONE Thing at Level 2 is connecting one metric to one specific decision — defining in advance: if this number moves below this threshold, this is what happens. That experience — data causing a decision rather than just informing a reflection — makes building more measurement-to-decision links feel necessary rather than optional.",
-    3: "The ONE Thing at Level 3 is designating three metrics as the ones the business runs from — declaring, explicitly, that these are the primary numbers and that everything else is context. A dashboard with twenty interesting metrics produces analysis that rarely reaches a decision. One hierarchy decision makes the measurement system usable rather than merely comprehensive.",
-    4: "The ONE Thing at Level 4 is making the dashboard the first thing reviewed in every team meeting — not a status update, not an agenda item, the actual numbers, reviewed together, before any other conversation. The meeting format is the carrier of the management culture. Change what comes first and you change what the organization believes is primary.",
-    5: "The ONE Thing at Level 5 is defining the decision each metric triggers when it moves. Not 'this number going down is bad' — but 'when this number drops below X, this specific action fires.' The data no longer needs to be interpreted — it produces actions according to pre-defined criteria.",
-    6: "The ONE Thing at Level 6 is adding one leading indicator to every key metric. Pipeline created this week predicts revenue next month. Team satisfaction scores predict retention next quarter. Leading indicators convert a reactive measurement system into a proactive management tool.",
-    7: "The ONE Thing at Level 7 is adding external benchmarks to the measurement system — what does top-quartile performance look like in this category and market? Internal excellence measured against external context produces better strategic decisions than internal excellence measured in isolation.",
+    1: "The key move at Level 1 is picking three numbers and tracking them every week without exception — a pipeline number, a delivery number, and a financial number. The experience of having a number to look at — and noticing that the number is more reliable than the feeling — is the domino that makes building a real measurement system feel worth the effort.",
+    2: "The key move at Level 2 is connecting one metric to one specific decision — defining in advance: if this number moves below this threshold, this is what happens. That experience — data causing a decision rather than just informing a reflection — makes building more measurement-to-decision links feel necessary rather than optional.",
+    3: "The key move at Level 3 is designating three metrics as the ones the business runs from — declaring, explicitly, that these are the primary numbers and that everything else is context. A dashboard with twenty interesting metrics produces analysis that rarely reaches a decision. One hierarchy decision makes the measurement system usable rather than merely comprehensive.",
+    4: "The key move at Level 4 is making the dashboard the first thing reviewed in every team meeting — not a status update, not an agenda item, the actual numbers, reviewed together, before any other conversation. The meeting format is the carrier of the management culture. Change what comes first and you change what the organization believes is primary.",
+    5: "The key move at Level 5 is defining the decision each metric triggers when it moves. Not 'this number going down is bad' — but 'when this number drops below X, this specific action fires.' The data no longer needs to be interpreted — it produces actions according to pre-defined criteria.",
+    6: "The key move at Level 6 is adding one leading indicator to every key metric. Pipeline created this week predicts revenue next month. Team satisfaction scores predict retention next quarter. Leading indicators convert a reactive measurement system into a proactive management tool.",
+    7: "The key move at Level 7 is adding external benchmarks to the measurement system — what does top-quartile performance look like in this category and market? Internal excellence measured against external context produces better strategic decisions than internal excellence measured in isolation.",
   },
   Power: {
-    1: "The ONE Thing at Level 1 is publishing a list of decisions the team can make without asking — specific, clear, and visible to everyone. Not a vague statement about empowerment. A literal list: if the situation is X, you decide. The first time a team member makes a decision using the list — and the founder accepts the outcome — the organization's decision velocity increases.",
-    2: "The ONE Thing at Level 2 is writing the decision boundary — a clear, specific document that defines what the team can decide, what requires the founder, and what happens at the edge cases. Known boundaries are expansive: teams operate confidently within them. Guessed boundaries are contractive.",
-    3: "The ONE Thing at Level 3 is making one authority transfer formal and irreversible — choosing one category of decisions, transferring it to a named person, and committing to not taking it back even when outcomes are imperfect. Permanent transfer teaches different behavior than provisional transfer. One irreversible transfer makes the team believe authority can be real.",
-    4: "The ONE Thing at Level 4 is stopping the acceptance of escalations in one specific decision category — formally telling the team that the founder will not take those decisions back. The team builds the decision muscle that was impossible to build as long as the founder was available as the decision backup.",
-    5: "The ONE Thing at Level 5 is formally transferring the largest remaining decision category from the founder to the relevant leader — with complete authority, documented criteria, and no escalation path back. The last significant operational dependency on the founder is removed.",
-    6: "The ONE Thing at Level 6 is defining where the founder's leverage creates the highest return — specifically identifying the activities where the founder's involvement produces meaningfully better outcomes than anyone else's. The founder stops filling available time with whatever flows naturally and starts filling it with the highest-value work available.",
-    7: "The ONE Thing at Level 7 is protecting dedicated time for the decisions only the founder should make — the specific categories of strategic decision where the founder's judgment, relationships, or context creates irreplaceable value. Not the most urgent decisions. The most important ones.",
+    1: "The key move at Level 1 is publishing a list of decisions the team can make without asking — specific, clear, and visible to everyone. Not a vague statement about empowerment. A literal list: if the situation is X, you decide. The first time a team member makes a decision using the list — and the founder accepts the outcome — the organization's decision velocity increases.",
+    2: "The key move at Level 2 is writing the decision boundary — a clear, specific document that defines what the team can decide, what requires the founder, and what happens at the edge cases. Known boundaries are expansive: teams operate confidently within them. Guessed boundaries are contractive.",
+    3: "The key move at Level 3 is making one authority transfer formal and irreversible — choosing one category of decisions, transferring it to a named person, and committing to not taking it back even when outcomes are imperfect. Permanent transfer teaches different behavior than provisional transfer. One irreversible transfer makes the team believe authority can be real.",
+    4: "The key move at Level 4 is stopping the acceptance of escalations in one specific decision category — formally telling the team that the founder will not take those decisions back. The team builds the decision muscle that was impossible to build as long as the founder was available as the decision backup.",
+    5: "The key move at Level 5 is formally transferring the largest remaining decision category from the founder to the relevant leader — with complete authority, documented criteria, and no escalation path back. The last significant operational dependency on the founder is removed.",
+    6: "The key move at Level 6 is defining where the founder's leverage creates the highest return — specifically identifying the activities where the founder's involvement produces meaningfully better outcomes than anyone else's. The founder stops filling available time with whatever flows naturally and starts filling it with the highest-value work available.",
+    7: "The key move at Level 7 is protecting dedicated time for the decisions only the founder should make — the specific categories of strategic decision where the founder's judgment, relationships, or context creates irreplaceable value. Not the most urgent decisions. The most important ones.",
   },
 };
 
@@ -829,6 +829,7 @@ const BLADE_LABEL_POS = [
 ];
 
 function BrandMarkChart({ pLevels, onBladeHover, hoveredBlade }) {
+  const isTouchDevice = typeof window !== "undefined" && "ontouchstart" in window;
   return (
     <div style={{ position: "relative", width: "100%", maxWidth: 460, margin: "0 auto" }}>
       <svg viewBox="-25 -12 150 130" style={{ width: "100%", height: "auto", overflow: "visible" }}>
@@ -847,8 +848,8 @@ function BrandMarkChart({ pLevels, onBladeHover, hoveredBlade }) {
                 cursor: "pointer",
                 filter: isHovered ? "drop-shadow(0 0 6px " + BRAND.teal + ")" : "none",
               }}
-              onMouseEnter={() => onBladeHover(bladeIdx)}
-              onMouseLeave={() => onBladeHover(null)}
+              onMouseEnter={isTouchDevice ? undefined : () => onBladeHover(bladeIdx)}
+              onMouseLeave={isTouchDevice ? undefined : () => onBladeHover(null)}
               onClick={() => onBladeHover(isHovered ? null : bladeIdx)}
             >
               {blade.map((d, segIdx) => {
@@ -889,8 +890,9 @@ function BrandMarkChart({ pLevels, onBladeHover, hoveredBlade }) {
                 transition: "fill 0.2s ease",
                 cursor: "pointer",
               }}
-              onMouseEnter={() => onBladeHover(i)}
-              onMouseLeave={() => onBladeHover(null)}
+              onMouseEnter={isTouchDevice ? undefined : () => onBladeHover(i)}
+              onMouseLeave={isTouchDevice ? undefined : () => onBladeHover(null)}
+              onClick={() => onBladeHover(hoveredBlade === i ? null : i)}
             >
               {name}
             </text>
@@ -1128,6 +1130,16 @@ function SelfAssessment() {
           width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
           border: 1.5px solid ${BRAND.paleTeal}; margin-top: 6px;
         }
+
+        @media (max-width: 600px) {
+          .answer-btn { padding: 1.2rem 1.2rem; gap: 1rem; font-size: 0.95rem; }
+          .cs-grid { grid-template-columns: 1fr !important; }
+          .pb-grid { grid-template-columns: 1fr !important; }
+          .p-badge { font-size: 0.5rem !important; padding: 2px 5px !important; letter-spacing: 0.05em !important; }
+          .p-row-btn { gap: 0.5rem !important; }
+          .p-row-dots { gap: 3px !important; }
+          .p-row-dots > div { width: 6px !important; height: 6px !important; }
+        }
       `}</style>
 
       <div style={{
@@ -1153,7 +1165,7 @@ function SelfAssessment() {
             </h1>
             {assessmentCount && (
               <p style={{ fontSize: "0.85rem", color: BRAND.gray, marginBottom: "0.75rem", fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "0.05em" }}>
-                <span style={{ color: BRAND.teal, fontWeight: 700 }}>{assessmentCount.toLocaleString()}</span> business owners have taken this assessment.
+                <span style={{ color: BRAND.teal, fontWeight: 700 }}>{assessmentCount.toLocaleString()}</span> business owners<br />have taken this assessment.
               </p>
             )}
 
@@ -1180,9 +1192,12 @@ function SelfAssessment() {
                 <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.paleTeal, letterSpacing: "0.1em", marginBottom: "0.75rem", fontWeight: 700 }}>
                   18 QUESTIONS — 10 MINUTES
                 </div>
-                <p style={{ fontSize: "0.9rem", color: BRAND.gray, lineHeight: 1.6, margin: 0 }}>
+                <p style={{ fontSize: "0.9rem", color: BRAND.gray, lineHeight: 1.6, margin: "0 0 1.25rem 0" }}>
                   Maps every constraint across all 9 P's. Shows you exactly where you're strong, where you're stuck, and why.
                 </p>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.85rem", fontWeight: 700, color: BRAND.teal, display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  Start Assessment <span style={{ fontSize: "1.1rem" }}>&rarr;</span>
+                </div>
               </button>
 
               <button onClick={handleStartQuick} style={{
@@ -1202,9 +1217,12 @@ function SelfAssessment() {
                 <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.gray, letterSpacing: "0.1em", marginBottom: "0.75rem", fontWeight: 700 }}>
                   12 QUESTIONS — 3 MINUTES
                 </div>
-                <p style={{ fontSize: "0.9rem", color: BRAND.gray, lineHeight: 1.6, margin: 0 }}>
+                <p style={{ fontSize: "0.9rem", color: BRAND.gray, lineHeight: 1.6, margin: "0 0 1.25rem 0" }}>
                   Find your overall level. A fast snapshot of where you are right now.
                 </p>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.85rem", fontWeight: 700, color: BRAND.gray, display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  Start Assessment <span style={{ fontSize: "1.1rem" }}>&rarr;</span>
+                </div>
               </button>
             </div>
 
@@ -1272,7 +1290,7 @@ function SelfAssessment() {
         {/* ── DEEP QUESTIONS ── */}
         {screen === "deep-questions" && currentDeepQ && (
           <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 780, width: "100%" }}>
-            <div style={{ marginBottom: "4rem" }}>
+            <div style={{ marginBottom: "2rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.gray, letterSpacing: "0.15em", textTransform: "uppercase" }}>
                 <span>{currentDeepQ.p} — {currentPStep === 1 ? "Your Reality" : "Reality Check"}</span>
                 <span style={{ color: BRAND.teal }}>{deepQIndex + 1} / 18</span>
@@ -1283,18 +1301,18 @@ function SelfAssessment() {
             </div>
 
             {currentPStep === 1 && (
-              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.paleTeal, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "1rem" }}>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.paleTeal, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
                 {P_CORE_QUESTIONS[currentPIndex]}
               </div>
             )}
 
             {currentPStep === 2 && (
-              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.accent, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "1rem" }}>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.accent, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
                 Scenario validation
               </div>
             )}
 
-            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(1.6rem, 3vw, 2.4rem)", fontWeight: 700, lineHeight: 1.35, marginBottom: "2.5rem", color: BRAND.offWhite }}>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(1.6rem, 3vw, 2.4rem)", fontWeight: 700, lineHeight: 1.35, marginBottom: "1.5rem", color: BRAND.offWhite }}>
               {currentDeepQ.text}
             </h2>
 
@@ -1320,7 +1338,7 @@ function SelfAssessment() {
               Your diagnosis is ready.
             </h2>
             <p style={{ fontSize: "1.05rem", color: BRAND.gray, lineHeight: 1.7, marginBottom: "2.5rem" }}>
-              What name should we put on the results?
+              What name should we put on the result?
             </p>
             <form onSubmit={handleEmailSubmit}>
               <input
@@ -1350,7 +1368,7 @@ function SelfAssessment() {
                 }}
               />
               <button type="submit" className="btn-gold" style={{ width: "100%" }}>
-                Reveal My Results →
+                Reveal My Result →
               </button>
             </form>
           </div>
@@ -1360,10 +1378,10 @@ function SelfAssessment() {
         {screen === "congrats" && congratsRes && (
           <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 700, width: "100%", textAlign: "center" }}>
             <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", letterSpacing: "0.25em", fontWeight: 700, color: BRAND.teal, textTransform: "uppercase", marginBottom: "1.5rem" }}>
-              {congratsRes.label}
+              Your Result
             </div>
             <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 800, lineHeight: 1.2, marginBottom: "2rem", color: BRAND.offWhite }}>
-              {congratsRes.headline}
+              {congratsRes.label}
             </h1>
             <div style={{ fontSize: "1.05rem", color: BRAND.lightGray, lineHeight: 1.85, textAlign: "left", whiteSpace: "pre-wrap", marginBottom: "3rem" }}>
               {congratsRes.body}
@@ -1519,7 +1537,7 @@ function SelfAssessment() {
               />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "3rem" }}>
+            <div className="cs-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "3rem" }}>
               <div style={{ background: BRAND.dark2, padding: "2rem", borderRadius: "4px", border: "1px solid rgba(255, 90, 95, 0.2)" }}>
                 <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.coral, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
                   Primary Constraint
@@ -1576,6 +1594,7 @@ function SelfAssessment() {
                   return (
                     <div key={i} style={{ borderBottom: "1px solid rgba(138,155,176,0.08)" }}>
                       <button
+                        className="p-row-btn"
                         onClick={() => setExpandedP(isExpanded ? null : pName)}
                         style={{
                           width: "100%", display: "flex", alignItems: "center",
@@ -1584,28 +1603,27 @@ function SelfAssessment() {
                         }}
                       >
                         <span style={{
-                          fontSize: "1.3rem", color: BRAND.teal, fontWeight: 700,
-                          width: "1.5rem", textAlign: "center", flexShrink: 0,
+                          fontSize: "1rem", color: BRAND.teal, fontWeight: 700,
+                          width: "1.2rem", textAlign: "center", flexShrink: 0,
                           transition: "transform 0.2s", display: "inline-block",
                           transform: isExpanded ? "rotate(90deg)" : "none",
-                          fontFamily: "system-ui, sans-serif",
                         }}>
-                          ＋
+                          +
                         </span>
-                        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "1rem", color: BRAND.offWhite, fontWeight: 500, flexGrow: 1, textAlign: "left" }}>
+                        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "1rem", color: BRAND.offWhite, fontWeight: 500, flexGrow: 1, textAlign: "left", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {pName}
                         </span>
                         {isConstraint && (
-                          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.6rem", color: BRAND.coral, letterSpacing: "0.1em", textTransform: "uppercase", padding: "3px 10px", border: "1px solid rgba(255,90,95,0.3)", borderRadius: "3px", flexShrink: 0 }}>
+                          <span className="p-badge" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.6rem", color: BRAND.coral, letterSpacing: "0.1em", textTransform: "uppercase", padding: "3px 8px", border: "1px solid rgba(255,90,95,0.3)", borderRadius: "3px", flexShrink: 0, whiteSpace: "nowrap" }}>
                             Constraint
                           </span>
                         )}
                         {isSuperpower && (
-                          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.6rem", color: BRAND.teal, letterSpacing: "0.1em", textTransform: "uppercase", padding: "3px 10px", border: "1px solid rgba(15,156,172,0.3)", borderRadius: "3px", flexShrink: 0 }}>
+                          <span className="p-badge" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.6rem", color: BRAND.teal, letterSpacing: "0.1em", textTransform: "uppercase", padding: "3px 8px", border: "1px solid rgba(15,156,172,0.3)", borderRadius: "3px", flexShrink: 0, whiteSpace: "nowrap" }}>
                             Strength
                           </span>
                         )}
-                        <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+                        <div className="p-row-dots" style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
                           {Array.from({ length: 7 }).map((_, j) => (
                             <div key={j} style={{
                               width: 8, height: 8, borderRadius: "50%",
@@ -1624,7 +1642,7 @@ function SelfAssessment() {
                           <p style={{ fontSize: "0.95rem", color: BRAND.lightGray, lineHeight: 1.75, margin: "0 0 1.25rem 0" }}>
                             {P_LEVEL_DESC_LONG[pName][pLevel]}
                           </p>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                          <div className="pb-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                             <div style={{ background: "rgba(255,90,95,0.06)", border: "1px solid rgba(255,90,95,0.15)", borderRadius: "6px", padding: "1rem 1.25rem" }}>
                               <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.6rem", color: BRAND.coral, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>
                                 The Problem
