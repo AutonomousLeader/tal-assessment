@@ -148,11 +148,17 @@ function createRoutes(repo) {
     // Increment the counter
     const newCount = repo.incrementCounter();
 
-    // Sync to Kit.com (stub — logs and returns until API key is configured)
+    // Sync to Kit.com — creates subscriber, populates custom fields, applies tags
     const kitResult = await syncToKit({
       email: body.email,
+      firstName: body.firstName,
       tags,
       assessmentId,
+      levelResult: body.levelResult,
+      assessmentType: body.assessmentType,
+      pLevels: body.pLevels,
+      primaryConstraint: body.primaryConstraint,
+      superpower: body.superpower,
     });
 
     // If Kit.com sync succeeded, mark it in the database
@@ -171,7 +177,7 @@ function createRoutes(repo) {
   });
 
   // PATCH /api/flag/:id — user decided they want outreach after seeing results
-  router.patch("/flag/:id", (req, res) => {
+  router.patch("/flag/:id", async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id < 1) {
       return res.status(400).json({ success: false, errors: ["Invalid assessment ID."] });
@@ -180,7 +186,29 @@ function createRoutes(repo) {
     repo.flagAssessment(id);
 
     // Rebuild tags with flagged = true and re-sync to Kit
-    // (handled asynchronously in a future iteration when Kit is live)
+    const row = repo.getAssessmentById(id);
+    if (row) {
+      const tags = buildTags({
+        assessmentType: row.assessment_type,
+        levelResult: row.level_result,
+        flagged: true,
+        primaryConstraint: row.primary_constraint,
+        superpower: row.superpower,
+      });
+
+      // Fire-and-forget — don't block the response on Kit sync
+      syncToKit({
+        email: row.email,
+        firstName: row.first_name,
+        tags,
+        assessmentId: id,
+        levelResult: row.level_result,
+        assessmentType: row.assessment_type,
+        pLevels: row.p_levels ? JSON.parse(row.p_levels) : null,
+        primaryConstraint: row.primary_constraint,
+        superpower: row.superpower,
+      }).catch(err => console.error("[Kit.com] Flag re-sync error:", err.message));
+    }
 
     res.json({ success: true });
   });

@@ -21,6 +21,7 @@ function createRepository(db) {
   const getCounterStmt = db.prepare("SELECT count FROM counter WHERE id = 1");
   const incrementCounterStmt = db.prepare("UPDATE counter SET count = count + 1 WHERE id = 1");
   const markKitSyncedStmt = db.prepare("UPDATE assessments SET kit_synced = 1, kit_subscriber_id = ? WHERE id = ?");
+  const getAssessmentByIdStmt = db.prepare("SELECT * FROM assessments WHERE id = ?");
   const getUnsyncedStmt = db.prepare("SELECT * FROM assessments WHERE kit_synced = 0 ORDER BY created_at ASC LIMIT 100");
 
   function insertAssessment(data) {
@@ -62,6 +63,10 @@ function createRepository(db) {
     flagAssessmentStmt.run(assessmentId);
   }
 
+  function getAssessmentById(id) {
+    return getAssessmentByIdStmt.get(id) || null;
+  }
+
   function getUnsyncedAssessments() {
     return getUnsyncedStmt.all();
   }
@@ -83,6 +88,7 @@ function createRepository(db) {
 
   return {
     insertAssessment,
+    getAssessmentById,
     flagAssessment,
     getCounter,
     incrementCounter,

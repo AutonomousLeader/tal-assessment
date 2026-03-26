@@ -1,89 +1,147 @@
-// Kit.com (ConvertKit) integration.
+// Kit.com (ConvertKit) API v4 integration.
 //
-// When ready to activate:
-// 1. Add KIT_API_SECRET to .env
-// 2. Uncomment the fetch calls below
-// 3. Kit API v4 docs: https://developers.kit.com/v4
+// Handles:
+// 1. Create or update subscriber with email + custom fields
+// 2. Create tags (idempotent) and apply to subscriber
+// 3. Return sync result for database tracking
 //
-// Flow:
-// 1. Create or update subscriber with email
-// 2. Add tags to the subscriber
-// 3. Return sync result so the database can be updated
+// Auth: X-Kit-Api-Key header (NOT Authorization: Bearer)
+// Rate limit: 120 requests per 60 seconds
+// Docs: https://developers.kit.com/v4
 
 const KIT_API_URL = "https://api.kit.com/v4";
 
-async function syncToKit({ email, tags, assessmentId }) {
+function kitHeaders(apiSecret) {
+  return {
+    "Content-Type": "application/json",
+    "X-Kit-Api-Key": apiSecret,
+  };
+}
+
+// Build custom field values from assessment data
+function buildCustomFields(data) {
+  const fields = {
+    tal_first_name: data.firstName || "",
+    tal_level: String(data.levelResult),
+    tal_assessment_type: data.assessmentType,
+    tal_constraint: data.primaryConstraint || "",
+    tal_superpower: data.superpower || "",
+  };
+
+  // Individual P levels (deep assessment only)
+  if (data.pLevels && typeof data.pLevels === "object") {
+    const pMap = {
+      Pipeline: "tal_pipeline_level",
+      Profit: "tal_profit_level",
+      Perspective: "tal_perspective_level",
+      Principles: "tal_principles_level",
+      Program: "tal_program_level",
+      People: "tal_people_level",
+      Process: "tal_process_level",
+      Progress: "tal_progress_level",
+      Power: "tal_power_level",
+    };
+
+    for (const [pName, fieldKey] of Object.entries(pMap)) {
+      fields[fieldKey] = data.pLevels[pName] != null ? String(data.pLevels[pName]) : "";
+    }
+  }
+
+  return fields;
+}
+
+// ── STEP 1: Create or update subscriber ──────────────────────────────────────
+
+async function createOrUpdateSubscriber(apiSecret, email, firstName, customFields) {
+  const res = await fetch(`${KIT_API_URL}/subscribers`, {
+    method: "POST",
+    headers: kitHeaders(apiSecret),
+    body: JSON.stringify({
+      email_address: email,
+      first_name: firstName || undefined,
+      state: "active",
+      fields: customFields,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Subscriber creation failed (${res.status}): ${err}`);
+  }
+
+  const body = await res.json();
+  return body.subscriber.id;
+}
+
+// ── STEP 2: Create tag (idempotent) and apply to subscriber ──────────────────
+
+async function ensureTagOnSubscriber(apiSecret, tagName, email) {
+  // Create tag (returns existing if name matches)
+  const createRes = await fetch(`${KIT_API_URL}/tags`, {
+    method: "POST",
+    headers: kitHeaders(apiSecret),
+    body: JSON.stringify({ name: tagName }),
+  });
+
+  if (!createRes.ok) {
+    const err = await createRes.text();
+    console.error(`[Kit.com] Failed to create tag "${tagName}" (${createRes.status}): ${err}`);
+    return;
+  }
+
+  const tagBody = await createRes.json();
+  const tagId = tagBody.tag.id;
+
+  // Apply tag to subscriber by email
+  const applyRes = await fetch(`${KIT_API_URL}/tags/${tagId}/subscribers`, {
+    method: "POST",
+    headers: kitHeaders(apiSecret),
+    body: JSON.stringify({ email_address: email }),
+  });
+
+  if (!applyRes.ok) {
+    const err = await applyRes.text();
+    console.error(`[Kit.com] Failed to apply tag "${tagName}" (${applyRes.status}): ${err}`);
+  }
+}
+
+// ── Main sync function ───────────────────────────────────────────────────────
+
+async function syncToKit(data) {
   const apiSecret = process.env.KIT_API_SECRET;
 
   if (!apiSecret) {
     console.log("[Kit.com] API key not configured. Skipping sync.");
-    console.log("[Kit.com] Would sync:", { email, tags, assessmentId });
+    console.log("[Kit.com] Would sync:", { email: data.email, tags: data.tags });
     return { synced: false, reason: "no_api_key" };
   }
 
   try {
-    // ── STEP 1: Create or update subscriber ──────────────────────────────
-    // const subscriberRes = await fetch(`${KIT_API_URL}/subscribers`, {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     "Authorization": `Bearer ${apiSecret}`,
-    //   },
-    //   body: JSON.stringify({
-    //     email_address: email,
-    //     state: "active",
-    //   }),
-    // });
-    //
-    // if (!subscriberRes.ok) {
-    //   const err = await subscriberRes.text();
-    //   console.error("[Kit.com] Failed to create subscriber:", err);
-    //   return { synced: false, reason: "subscriber_creation_failed" };
-    // }
-    //
-    // const subscriber = await subscriberRes.json();
-    // const subscriberId = subscriber.subscriber.id;
+    // Build custom field values from assessment data
+    const customFields = buildCustomFields(data);
 
-    // ── STEP 2: Tag the subscriber ───────────────────────────────────────
-    // for (const tagName of tags) {
-    //   // Create or find the tag
-    //   const tagRes = await fetch(`${KIT_API_URL}/tags`, {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //       "Authorization": `Bearer ${apiSecret}`,
-    //     },
-    //     body: JSON.stringify({ name: tagName }),
-    //   });
-    //
-    //   if (!tagRes.ok) {
-    //     console.error(`[Kit.com] Failed to create tag "${tagName}":`, await tagRes.text());
-    //     continue;
-    //   }
-    //
-    //   const tag = await tagRes.json();
-    //   const tagId = tag.tag.id;
-    //
-    //   // Apply tag to subscriber
-    //   await fetch(`${KIT_API_URL}/tags/${tagId}/subscribers`, {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //       "Authorization": `Bearer ${apiSecret}`,
-    //     },
-    //     body: JSON.stringify({ email_address: email }),
-    //   });
-    // }
+    // Step 1: Create or update subscriber with custom fields
+    const subscriberId = await createOrUpdateSubscriber(
+      apiSecret,
+      data.email,
+      data.firstName,
+      customFields
+    );
 
-    // ── STEP 3: Return sync result ───────────────────────────────────────
-    // return { synced: true, subscriberId };
+    console.log(`[Kit.com] Subscriber ${subscriberId} created/updated for ${data.email}`);
 
-    console.log("[Kit.com] Stub mode — would create subscriber and apply tags.");
-    return { synced: false, reason: "stub_mode" };
+    // Step 2: Apply each tag
+    for (const tagName of data.tags) {
+      await ensureTagOnSubscriber(apiSecret, tagName, data.email);
+    }
+
+    console.log(`[Kit.com] Applied ${data.tags.length} tags to ${data.email}`);
+
+    return { synced: true, subscriberId: String(subscriberId) };
   } catch (err) {
     console.error("[Kit.com] Sync error:", err.message);
     return { synced: false, reason: "error", error: err.message };
   }
 }
 
-module.exports = { syncToKit };
+module.exports = { syncToKit, buildCustomFields };

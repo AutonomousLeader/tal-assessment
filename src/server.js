@@ -4,6 +4,8 @@ const cors = require("cors");
 const { initializeDatabase } = require("./db/schema");
 const { createRepository } = require("./db/repository");
 const { createRoutes } = require("./routes/assessment");
+const { ensureCustomFields } = require("./services/kit-custom-fields");
+const { startRetryLoop } = require("./services/kit-retry");
 
 // ─── Configuration ──────────────────────────────────────────────────────────
 
@@ -67,6 +69,16 @@ app.get("*", (req, res) => {
   }
   res.sendFile(path.join(__dirname, "../public/index.html"));
 });
+
+// ─── Kit.com Startup ────────────────────────────────────────────────────────
+
+// Ensure custom fields exist (idempotent, no-op without API key)
+ensureCustomFields(process.env.KIT_API_SECRET).catch(err => {
+  console.error("[Startup] Kit custom field setup failed:", err.message);
+});
+
+// Retry unsynced assessments every 5 minutes
+startRetryLoop(repo, 5 * 60 * 1000);
 
 // ─── Start ──────────────────────────────────────────────────────────────────
 
