@@ -1546,7 +1546,9 @@ function SelfAssessment() {
               <p style={{ fontSize: "0.85rem", color: BRAND.gray, lineHeight: 1.6, maxWidth: 500, margin: "0 auto" }}>
                 Results for <span style={{ color: BRAND.offWhite }}>{firstName || email}</span>
               </p>
-              <button onClick={handleDownloadPdf} disabled={pdfGenerating} className="btn-ghost" style={{ marginTop: "1.5rem", padding: "0.7rem 1.5rem", fontSize: "0.7rem" }}>
+              <button onClick={handleDownloadPdf} disabled={pdfGenerating} style={{ marginTop: "1.5rem", padding: "0.7rem 1.5rem", fontSize: "0.7rem", background: "transparent", color: BRAND.teal, border: "1px solid " + BRAND.teal, borderRadius: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, letterSpacing: "0.05em", cursor: "pointer", transition: "all 0.2s" }}
+                onMouseEnter={e => { e.target.style.background = "rgba(8,126,139,0.15)"; e.target.style.borderColor = BRAND.paleTeal; }}
+                onMouseLeave={e => { e.target.style.background = "transparent"; e.target.style.borderColor = BRAND.teal; }}>
                 {pdfGenerating ? "Generating..." : "Download PDF ↓"}
               </button>
             </div>
@@ -1701,7 +1703,9 @@ function SelfAssessment() {
               <p style={{ fontSize: "0.85rem", color: BRAND.gray, lineHeight: 1.6, maxWidth: 500, margin: "0 auto" }}>
                 Your business is as strong as its weakest P. Results for <span style={{ color: BRAND.offWhite }}>{firstName || email}</span>.
               </p>
-              <button onClick={handleDownloadPdf} disabled={pdfGenerating} className="btn-ghost" style={{ marginTop: "1.5rem", padding: "0.7rem 1.5rem", fontSize: "0.7rem" }}>
+              <button onClick={handleDownloadPdf} disabled={pdfGenerating} style={{ marginTop: "1.5rem", padding: "0.7rem 1.5rem", fontSize: "0.7rem", background: "transparent", color: BRAND.teal, border: "1px solid " + BRAND.teal, borderRadius: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, letterSpacing: "0.05em", cursor: "pointer", transition: "all 0.2s" }}
+                onMouseEnter={e => { e.target.style.background = "rgba(8,126,139,0.15)"; e.target.style.borderColor = BRAND.paleTeal; }}
+                onMouseLeave={e => { e.target.style.background = "transparent"; e.target.style.borderColor = BRAND.teal; }}>
                 {pdfGenerating ? "Generating..." : "Download PDF ↓"}
               </button>
             </div>
