@@ -1134,9 +1134,11 @@ function SelfAssessment() {
     if (!el || typeof html2pdf === "undefined") return;
     setPdfGenerating(true);
 
-    // Temporarily show PDF header and expand all P-rows for capture
+    // Temporarily show PDF header/footer and expand all P-rows for capture
     const pdfHeader = document.getElementById("pdf-header");
+    const pdfFooter = document.getElementById("pdf-footer");
     if (pdfHeader) pdfHeader.style.display = "block";
+    if (pdfFooter) pdfFooter.style.display = "block";
     const savedExpandedP = expandedP;
     setExpandedP("__ALL__");
 
@@ -1158,10 +1160,12 @@ function SelfAssessment() {
         pagebreak: { mode: ["avoid-all", "css", "legacy"] },
       }).from(el).save().then(() => {
         if (pdfHeader) pdfHeader.style.display = "none";
+        if (pdfFooter) pdfFooter.style.display = "none";
         setExpandedP(savedExpandedP);
         setPdfGenerating(false);
       }).catch(() => {
         if (pdfHeader) pdfHeader.style.display = "none";
+        if (pdfFooter) pdfFooter.style.display = "none";
         setExpandedP(savedExpandedP);
         setPdfGenerating(false);
       });
@@ -1712,11 +1716,11 @@ function SelfAssessment() {
 
             <div id="pdf-content">
             {/* PDF-only header — hidden on screen, shown during PDF capture */}
-            <div id="pdf-header" style={{ display: "none", textAlign: "center", marginBottom: "2rem", paddingBottom: "1.5rem", borderBottom: "1px solid #3A3A3A" }}>
-              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", letterSpacing: "0.25em", fontWeight: 700, color: BRAND.teal, textTransform: "uppercase", marginBottom: "1rem" }}>
+            <div id="pdf-header" style={{ display: "none", textAlign: "center", marginBottom: "2rem", paddingBottom: "1.5rem", borderBottom: "1px solid #3A3A3A", background: "#1C1C1C", padding: "2rem 2rem 1.5rem" }}>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", letterSpacing: "0.25em", fontWeight: 700, color: "#087E8B", textTransform: "uppercase", marginBottom: "1rem" }}>
                 Your Complete 9P Profile
               </div>
-              <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "2.2rem", fontWeight: 800, lineHeight: 1.1, marginBottom: "0.75rem", color: BRAND.offWhite }}>
+              <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "2.2rem", fontWeight: 800, lineHeight: 1.1, marginBottom: "0.75rem", color: "#FFFFFF" }}>
                 {deepRes.label}
               </h1>
               <div style={{ fontSize: "0.95rem", color: "#c0c0c0", lineHeight: 1.75, maxWidth: 550, margin: "0 auto 0.5rem" }}>
@@ -1896,6 +1900,17 @@ function SelfAssessment() {
               );
             })()}
 
+            {/* PDF-only footer — clean closing line instead of interactive buttons */}
+            <div id="pdf-footer" style={{ display: "none", textAlign: "center", marginTop: "2rem", paddingTop: "1.5rem", borderTop: "1px solid #3A3A3A", background: "#1C1C1C", padding: "1.5rem 2rem" }}>
+              <p style={{ fontSize: "0.85rem", color: "#999999", lineHeight: 1.6, margin: "0 0 0.5rem" }}>
+                Ready to walk through your results?
+              </p>
+              <p style={{ fontSize: "1rem", color: "#087E8B", fontWeight: 600, margin: 0 }}>
+                Book a Business Assessment at theautonomousleader.com
+              </p>
+            </div>
+            </div>{/* close pdf-content */}
+
             <div style={{ textAlign: "center", paddingTop: "1rem" }}>
               {flagged ? (
                 <div style={{ display: "inline-block", textAlign: "left", background: "rgba(46,109,164,0.07)", border: "1px solid rgba(46,109,164,0.2)", padding: "2rem", maxWidth: 600, borderRadius: "4px" }}>
@@ -1942,7 +1957,6 @@ function SelfAssessment() {
                 </p>
               )}
             </div>
-            </div>{/* close pdf-content */}
 
           </div>
         )}
