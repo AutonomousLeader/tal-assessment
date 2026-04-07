@@ -17,6 +17,7 @@ const ALLOWED_ORIGINS = [
   "https://assessment.theautonomousleader.com",
   "https://theautonomousleader.com",
   "https://www.theautonomousleader.com",
+  "https://tal-assessment-production.up.railway.app",
   // Development
   "http://localhost:3000",
   "http://localhost:3001",
