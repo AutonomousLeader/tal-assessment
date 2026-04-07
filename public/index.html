@@ -1133,14 +1133,39 @@ function SelfAssessment() {
     const el = document.getElementById("pdf-content");
     if (!el || typeof html2pdf === "undefined") return;
     setPdfGenerating(true);
+
+    // Temporarily show PDF header and expand all P-rows for capture
+    const pdfHeader = document.getElementById("pdf-header");
+    if (pdfHeader) pdfHeader.style.display = "block";
+    const savedExpandedP = expandedP;
+    setExpandedP("__ALL__");
+
     const name = firstName || "Assessment";
-    html2pdf().set({
-      margin: [10, 10, 10, 10],
-      filename: "TAL-Assessment-" + name + ".pdf",
-      image: { type: "jpeg", quality: 0.95 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: "#1C1C1C" },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-    }).from(el).save().then(() => setPdfGenerating(false)).catch(() => setPdfGenerating(false));
+    // Small delay to let React re-render expanded rows
+    setTimeout(() => {
+      html2pdf().set({
+        margin: [8, 8, 8, 8],
+        filename: "TAL-Assessment-" + name + ".pdf",
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#1C1C1C",
+          letterRendering: true,
+          logging: false,
+        },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+      }).from(el).save().then(() => {
+        if (pdfHeader) pdfHeader.style.display = "none";
+        setExpandedP(savedExpandedP);
+        setPdfGenerating(false);
+      }).catch(() => {
+        if (pdfHeader) pdfHeader.style.display = "none";
+        setExpandedP(savedExpandedP);
+        setPdfGenerating(false);
+      });
+    }, 300);
   };
 
   const handleSetReminder = () => {
@@ -1682,6 +1707,22 @@ function SelfAssessment() {
             </div>
 
             <div id="pdf-content">
+            {/* PDF-only header — hidden on screen, shown during PDF capture */}
+            <div id="pdf-header" style={{ display: "none", textAlign: "center", marginBottom: "2rem", paddingBottom: "1.5rem", borderBottom: "1px solid #3A3A3A" }}>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", letterSpacing: "0.25em", fontWeight: 700, color: BRAND.teal, textTransform: "uppercase", marginBottom: "1rem" }}>
+                Your Complete 9P Profile
+              </div>
+              <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "2.2rem", fontWeight: 800, lineHeight: 1.1, marginBottom: "0.75rem", color: BRAND.offWhite }}>
+                {deepRes.label}
+              </h1>
+              <div style={{ fontSize: "0.95rem", color: "#c0c0c0", lineHeight: 1.75, maxWidth: 550, margin: "0 auto 0.5rem" }}>
+                {deepRes.body}
+              </div>
+              <p style={{ fontSize: "0.8rem", color: "#999999", lineHeight: 1.5, maxWidth: 450, margin: "0 auto" }}>
+                Results for {firstName || email}
+              </p>
+            </div>
+
             <div style={{ marginBottom: "3rem" }}>
               <BrandMarkChart
                 pLevels={deepResult.pLevels}
@@ -1722,11 +1763,11 @@ function SelfAssessment() {
               </div>
             </div>
 
-            <div id="d-next" style={{ background: "linear-gradient(180deg, rgba(15,156,172,0.06) 0%, transparent 100%)", padding: "2.5rem", border: "1px solid rgba(15,156,172,0.15)", borderRadius: "4px", marginBottom: "3rem" }}>
+            <div id="d-next" style={{ background: "#1f2e33", padding: "2.5rem", border: "1px solid #1a4a50", borderRadius: "4px", marginBottom: "3rem" }}>
               <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.paleTeal, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
                 The Next Move
               </div>
-              <p style={{ fontSize: "1rem", color: BRAND.offWhite, lineHeight: 1.6, marginBottom: "2rem" }}>
+              <p style={{ fontSize: "1rem", color: "#F5F5F5", lineHeight: 1.6, marginBottom: "2rem" }}>
                 {deepRes.next}
               </p>
               <button className="btn-gold" style={{ width: "100%", textAlign: "center" }}>
@@ -1741,7 +1782,7 @@ function SelfAssessment() {
               <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
                 {P_NAMES.map((pName, i) => {
                   const pLevel = deepResult.pLevels[pName];
-                  const isExpanded = expandedP === pName;
+                  const isExpanded = expandedP === pName || expandedP === "__ALL__";
                   const isConstraint = pName === deepResult.primaryConstraint;
                   const isSuperpower = pName === deepResult.superpower;
                   return (
@@ -1829,22 +1870,22 @@ function SelfAssessment() {
               const superpowerP = deepResult.superpower;
               const superpowerLevel = deepResult.pLevels[superpowerP];
               return (
-                <div id="d-playbook" style={{ background: "rgba(8,126,139,0.06)", border: "1px solid rgba(8,126,139,0.2)", borderRadius: "6px", padding: "2.5rem", marginBottom: "3rem" }}>
+                <div id="d-playbook" style={{ background: "#1e2d30", border: "1px solid #1a4a50", borderRadius: "6px", padding: "2.5rem", marginBottom: "3rem" }}>
                   <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.teal, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "0.75rem", fontWeight: 700 }}>
                     Your Playbook This Week
                   </div>
-                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.5rem", fontWeight: 700, color: BRAND.offWhite, marginBottom: "1.5rem" }}>
+                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.5rem", fontWeight: 700, color: "#F5F5F5", marginBottom: "1.5rem" }}>
                     Start here — {constraintP} is the bottleneck
                   </h3>
-                  <p style={{ fontSize: "0.95rem", color: BRAND.lightGray, lineHeight: 1.75, marginBottom: "1.5rem" }}>
+                  <p style={{ fontSize: "0.95rem", color: "#e0e0e0", lineHeight: 1.75, marginBottom: "1.5rem" }}>
                     {SOLUTION_LONG[constraintP][constraintLevel]}
                   </p>
-                  <div style={{ borderTop: "1px solid rgba(138,155,176,0.15)", paddingTop: "1.5rem", marginTop: "0.5rem" }}>
+                  <div style={{ borderTop: "1px solid #3A3A3A", paddingTop: "1.5rem", marginTop: "0.5rem" }}>
                     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.paleTeal, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.5rem" }}>
                       Meanwhile, protect your strength
                     </div>
-                    <p style={{ fontSize: "0.85rem", color: BRAND.gray, lineHeight: 1.7, margin: 0 }}>
-                      <strong style={{ color: BRAND.offWhite }}>{superpowerP} (Level {superpowerLevel}):</strong> {P_LEVEL_UNLOCK[superpowerP][superpowerLevel]}
+                    <p style={{ fontSize: "0.85rem", color: "#999999", lineHeight: 1.7, margin: 0 }}>
+                      <strong style={{ color: "#F5F5F5" }}>{superpowerP} (Level {superpowerLevel}):</strong> {P_LEVEL_UNLOCK[superpowerP][superpowerLevel]}
                     </p>
                   </div>
                 </div>
@@ -1866,7 +1907,7 @@ function SelfAssessment() {
                   <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.4rem", fontWeight: 700, color: BRAND.offWhite, lineHeight: 1.4, marginBottom: "1rem" }}>
                     You've seen where {deepResult.primaryConstraint} is holding you back. Want to walk through the fix with someone who's helped hundreds of owners break through this exact constraint?
                   </h3>
-                  <p style={{ fontSize: "0.95rem", color: BRAND.gray, lineHeight: 1.7, marginBottom: "2rem" }}>
+                  <p style={{ fontSize: "0.95rem", color: "#999999", lineHeight: 1.7, marginBottom: "2rem" }}>
                     A 40–60 minute business assessment call. No pitch — just a focused conversation on your {deepResult.primaryConstraint} bottleneck and the fastest path forward.
                   </p>
                   <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
