@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#1C1C1C">
-    <title>TAL Self Assessment Demo</title>
+    <title>Self Assessment — The Autonomous Leader</title>
 
     <!-- React and ReactDOM (production builds — smaller, faster) -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -973,6 +973,7 @@ function SelfAssessment() {
   const [screen, setScreen] = useState("intro");
   const [assessmentType, setAssessmentType] = useState(null);
   const [flagged, setFlagged] = useState(false);
+  const [outreachDismissed, setOutreachDismissed] = useState(false);
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [isFading, setIsFading] = useState(false);
@@ -1110,11 +1111,35 @@ function SelfAssessment() {
       })
       .catch(err => console.warn("Assessment submission failed:", err));
 
-    // Go directly to results
-    if (assessmentType === "deep" && deepResult) {
-      setExpandedP(deepResult.primaryConstraint);
-    }
-    transition(() => setScreen(assessmentType === "deep" ? "deep-result" : "result"));
+    // Show analyzing screen, then reveal results after a brief moment
+    transition(() => setScreen("analyzing"));
+    setTimeout(() => {
+      if (assessmentType === "deep" && deepResult) {
+        setExpandedP(deepResult.primaryConstraint);
+      }
+      transition(() => setScreen(assessmentType === "deep" ? "deep-result" : "result"));
+    }, 2800);
+  };
+
+  const handleStartOver = () => {
+    setIsFading(true);
+    setTimeout(() => {
+      setScreen("intro");
+      setAssessmentType(null);
+      setAnswers([]);
+      setResult(null);
+      setDeepAnswers([]);
+      setDeepResult(null);
+      setFlagged(false);
+      setOutreachDismissed(false);
+      setEmail("");
+      setFirstName("");
+      setAssessmentId(null);
+      setHoveredBlade(null);
+      setExpandedP(null);
+      setReminderSet(false);
+      setIsFading(false);
+    }, 350);
   };
 
   const handleFlagFromResults = () => {
@@ -1264,6 +1289,23 @@ function SelfAssessment() {
         background: "radial-gradient(ellipse at 80% 50%, rgba(46,109,164,0.07) 0%, transparent 70%)",
         pointerEvents: "none", zIndex: 0
       }} />
+
+      {screen !== "intro" && screen !== "analyzing" && (
+        <button onClick={handleStartOver} style={{
+          position: "fixed", top: "1.25rem", left: "1.25rem", zIndex: 50,
+          background: "rgba(28,28,28,0.85)", backdropFilter: "blur(8px)",
+          border: "1px solid rgba(138,155,176,0.15)", borderRadius: "6px",
+          padding: "0.5rem 0.9rem", cursor: "pointer", transition: "all 0.2s",
+          fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem",
+          color: BRAND.gray, letterSpacing: "0.1em", textTransform: "uppercase",
+          display: "flex", alignItems: "center", gap: "0.4rem",
+        }}
+        onMouseOver={function(e) { e.currentTarget.style.color = BRAND.offWhite; e.currentTarget.style.borderColor = "rgba(138,155,176,0.4)"; }}
+        onMouseOut={function(e) { e.currentTarget.style.color = BRAND.gray; e.currentTarget.style.borderColor = "rgba(138,155,176,0.15)"; }}
+        >
+          <span style={{ fontSize: "0.9rem" }}>&larr;</span> Start Over
+        </button>
+      )}
 
       <div style={{
         position: "relative", zIndex: 1, minHeight: "100vh",
@@ -1526,6 +1568,49 @@ function SelfAssessment() {
           </div>
         )}
 
+        {/* ── ANALYZING SCREEN ── */}
+        {screen === "analyzing" && (
+          <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 500, textAlign: "center" }}>
+            <style>{`
+              @keyframes analyzePulse {
+                0%, 100% { opacity: 0.3; transform: scale(0.8); }
+                50% { opacity: 1; transform: scale(1.1); }
+              }
+              @keyframes analyzeBar {
+                0% { width: 0%; }
+                100% { width: 100%; }
+              }
+            `}</style>
+            <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "2.5rem" }}>
+              {[0, 1, 2, 3, 4].map(i => (
+                <div key={i} style={{
+                  width: 10, height: 10, borderRadius: "50%", background: BRAND.teal,
+                  animation: "analyzePulse 1.2s ease-in-out infinite",
+                  animationDelay: (i * 0.2) + "s",
+                }} />
+              ))}
+            </div>
+            <h2 style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(1.8rem, 3.5vw, 2.5rem)",
+              fontWeight: 700, color: BRAND.offWhite, marginBottom: "1rem",
+            }}>
+              Analyzing your responses
+            </h2>
+            <p style={{ fontSize: "1rem", color: BRAND.gray, lineHeight: 1.7, marginBottom: "2rem" }}>
+              {assessmentType === "deep"
+                ? "Mapping 9 pillars across 7 levels..."
+                : "Calculating your overall level..."
+              }
+            </p>
+            <div style={{ width: "100%", height: "2px", background: "rgba(8,126,139,0.15)", borderRadius: "1px", overflow: "hidden" }}>
+              <div style={{
+                height: "100%", background: BRAND.teal, borderRadius: "1px",
+                animation: "analyzeBar 2.5s ease-out forwards",
+              }} />
+            </div>
+          </div>
+        )}
+
         {/* ── QUICK RESULT SCREEN ── */}
         {screen === "result" && result && res && (
           <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 760, width: "100%", textAlign: "left" }}>
@@ -1641,7 +1726,7 @@ function SelfAssessment() {
                     Someone from our team will reach out to you directly. You don't need to wait for a sequence — we'll come to you to discuss these findings.
                   </p>
                 </div>
-              ) : (
+              ) : outreachDismissed ? null : (
                 <div style={{ maxWidth: 600, margin: "0 auto" }}>
                   <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.4rem", fontWeight: 700, color: BRAND.offWhite, lineHeight: 1.4, marginBottom: "1rem" }}>
                     Now that you've seen the diagnosis — would it help to walk through it with someone who's seen hundreds of businesses at this level?
@@ -1653,7 +1738,7 @@ function SelfAssessment() {
                     <button className="btn-gold" onClick={handleFlagFromResults}>
                       Yes, that would be helpful
                     </button>
-                    <button className="btn-ghost" style={{ opacity: 0.6 }}>
+                    <button className="btn-ghost" onClick={() => setOutreachDismissed(true)}>
                       I'm good for now
                     </button>
                   </div>
@@ -1921,7 +2006,7 @@ function SelfAssessment() {
                     Someone from our team will reach out to you directly. You don't need to wait for a sequence — we'll come to you to discuss these findings.
                   </p>
                 </div>
-              ) : (
+              ) : outreachDismissed ? null : (
                 <div style={{ maxWidth: 600, margin: "0 auto" }}>
                   <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.4rem", fontWeight: 700, color: BRAND.offWhite, lineHeight: 1.4, marginBottom: "1rem" }}>
                     You've seen where {deepResult.primaryConstraint} is holding you back. Want to walk through the fix with someone who's helped hundreds of owners break through this exact constraint?
@@ -1933,7 +2018,7 @@ function SelfAssessment() {
                     <button className="btn-gold" onClick={handleFlagFromResults}>
                       Yes, let's talk about {deepResult.primaryConstraint}
                     </button>
-                    <button className="btn-ghost" style={{ opacity: 0.6 }}>
+                    <button className="btn-ghost" onClick={() => setOutreachDismissed(true)}>
                       I'm good for now
                     </button>
                   </div>
