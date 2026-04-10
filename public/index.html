@@ -1718,7 +1718,7 @@ function SelfAssessment() {
               </div>
             </div>
 
-            {/* ── QUICK RESULTS RESOURCE CARD ── */}
+            {/* ── QUICK RESULTS COMMUNITY INVITATION ── */}
             {(() => {
               const categoryToPrimary = {
                 "Foundation & Clarity": "Pipeline",
@@ -1731,22 +1731,37 @@ function SelfAssessment() {
               const primaryP = categoryToPrimary[weakest.name];
               const resource = P_RESOURCES[primaryP];
               return (
-                <div style={{ background: "linear-gradient(135deg, rgba(8,126,139,0.12) 0%, rgba(8,126,139,0.04) 100%)", border: "1px solid rgba(8,126,139,0.25)", borderRadius: "8px", padding: "2rem", marginBottom: "2rem", textAlign: "center" }}>
-                  <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.teal, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>
-                    Free Resource — Based on Your Results
+                <div style={{ background: "linear-gradient(135deg, rgba(8,126,139,0.12) 0%, rgba(8,126,139,0.04) 100%)", border: "1px solid rgba(8,126,139,0.25)", borderRadius: "8px", padding: "2rem", marginBottom: "2rem" }}>
+                  <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+                    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.teal, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "0.75rem", fontWeight: 700 }}>
+                      You Have Your Level — Now What?
+                    </div>
+                    <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.4rem", fontWeight: 700, color: BRAND.offWhite, marginBottom: "0.75rem", lineHeight: 1.3 }}>
+                      The Autonomous Leader Community
+                    </h3>
+                    <p style={{ fontSize: "0.9rem", color: BRAND.gray, lineHeight: 1.7, maxWidth: 480, margin: "0 auto" }}>
+                      A free community of service business owners working through the same levels you just saw. Playbooks, conversations, and a shared framework — so you always know what to work on next.
+                    </p>
                   </div>
-                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.4rem", fontWeight: 700, color: BRAND.offWhite, marginBottom: "0.75rem" }}>
-                    {resource.title}
-                  </h3>
-                  <p style={{ fontSize: "0.9rem", color: BRAND.gray, lineHeight: 1.7, maxWidth: 480, margin: "0 auto 1.25rem" }}>
-                    {resource.desc}
-                  </p>
-                  <a href={SKOOL_URL} target="_blank" rel="noopener noreferrer" className="btn-gold" style={{ display: "inline-block" }}>
-                    {resource.cta}
-                  </a>
-                  <div style={{ marginTop: "1rem" }}>
-                    <p style={{ fontSize: "0.75rem", color: BRAND.gray }}>
-                      All 9 playbooks available free in <a href={SKOOL_URL} target="_blank" rel="noopener noreferrer" style={{ color: BRAND.teal, textDecoration: "underline" }}>The Autonomous Leader community</a>
+
+                  <div style={{ background: BRAND.dark3, borderRadius: "6px", padding: "1rem 1.25rem", marginBottom: "1.5rem" }}>
+                    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.6rem", color: BRAND.coral, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.3rem", fontWeight: 700 }}>
+                      Recommended for You
+                    </div>
+                    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1rem", fontWeight: 700, color: BRAND.offWhite, marginBottom: "0.25rem" }}>
+                      {resource.title}
+                    </div>
+                    <p style={{ fontSize: "0.8rem", color: BRAND.gray, lineHeight: 1.5, margin: 0 }}>
+                      Your weakest area was <strong style={{ color: BRAND.offWhite }}>{weakest.shortName}</strong>. This playbook has the constraint, the fix, and the tools — free inside the community.
+                    </p>
+                  </div>
+
+                  <div style={{ textAlign: "center" }}>
+                    <a href={SKOOL_URL} target="_blank" rel="noopener noreferrer" className="btn-gold" style={{ display: "inline-block" }}>
+                      Join the Community — Free
+                    </a>
+                    <p style={{ fontSize: "0.75rem", color: BRAND.gray, marginTop: "0.75rem" }}>
+                      Free to join. No credit card. No pitch.
                     </p>
                   </div>
                 </div>
@@ -2022,30 +2037,59 @@ function SelfAssessment() {
               );
             })()}
 
-            {/* ── RESOURCE DOWNLOAD CARD ── */}
+            {/* ── COMMUNITY INVITATION + RESOURCE ── */}
             {(() => {
               const constraintP = deepResult.primaryConstraint;
               const resource = P_RESOURCES[constraintP];
               return (
-                <div style={{ background: "linear-gradient(135deg, rgba(8,126,139,0.12) 0%, rgba(8,126,139,0.04) 100%)", border: "1px solid rgba(8,126,139,0.25)", borderRadius: "8px", padding: "2.5rem", marginBottom: "3rem", textAlign: "center" }}>
-                  <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.teal, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>
-                    Free Resource — Based on Your Results
+                <div style={{ background: "linear-gradient(135deg, rgba(8,126,139,0.12) 0%, rgba(8,126,139,0.04) 100%)", border: "1px solid rgba(8,126,139,0.25)", borderRadius: "8px", padding: "2.5rem", marginBottom: "3rem" }}>
+                  <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+                    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.teal, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "0.75rem", fontWeight: 700 }}>
+                      You Have Your Diagnosis — Now What?
+                    </div>
+                    <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.6rem", fontWeight: 700, color: BRAND.offWhite, marginBottom: "1rem", lineHeight: 1.3 }}>
+                      The Autonomous Leader Community
+                    </h3>
+                    <p style={{ fontSize: "0.95rem", color: BRAND.gray, lineHeight: 1.75, maxWidth: 520, margin: "0 auto" }}>
+                      A free community of service business owners working through the same levels you just saw. Every member has taken this assessment. Every conversation starts from a shared framework. No fluff — just owners building businesses that run without them.
+                    </p>
                   </div>
-                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.6rem", fontWeight: 700, color: BRAND.offWhite, marginBottom: "0.75rem" }}>
-                    {resource.title}
-                  </h3>
-                  <p style={{ fontSize: "0.95rem", color: BRAND.gray, lineHeight: 1.7, maxWidth: 500, margin: "0 auto 1.5rem" }}>
-                    {resource.desc}
-                  </p>
-                  <p style={{ fontSize: "0.8rem", color: BRAND.gray, lineHeight: 1.6, maxWidth: 440, margin: "0 auto 2rem" }}>
-                    Your primary constraint is <strong style={{ color: BRAND.offWhite }}>{constraintP}</strong>. This 16-page playbook gives you the one move at every level, the fix sequence, and the tools to start this week. Available free inside the community.
-                  </p>
-                  <a href={SKOOL_URL} target="_blank" rel="noopener noreferrer" className="btn-gold" style={{ display: "inline-block" }}>
-                    {resource.cta}
-                  </a>
-                  <div style={{ marginTop: "1.5rem" }}>
-                    <p style={{ fontSize: "0.75rem", color: BRAND.gray }}>
-                      All 9 playbooks in the series are available in <a href={SKOOL_URL} target="_blank" rel="noopener noreferrer" style={{ color: BRAND.teal, textDecoration: "underline" }}>The Autonomous Leader community</a>
+
+                  <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
+                    <div style={{ flex: "1 1 200px", background: "rgba(8,126,139,0.08)", borderRadius: "6px", padding: "1rem 1.25rem" }}>
+                      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.teal, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.4rem", fontWeight: 700 }}>9 Playbooks</div>
+                      <p style={{ fontSize: "0.85rem", color: BRAND.lightGray, lineHeight: 1.5, margin: 0 }}>One for every P in the framework. 16 pages each — the constraint, the fix, the tools.</p>
+                    </div>
+                    <div style={{ flex: "1 1 200px", background: "rgba(8,126,139,0.08)", borderRadius: "6px", padding: "1rem 1.25rem" }}>
+                      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.teal, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.4rem", fontWeight: 700 }}>Level-Specific Conversations</div>
+                      <p style={{ fontSize: "0.85rem", color: BRAND.lightGray, lineHeight: 1.5, margin: 0 }}>Ask questions, share wins, get feedback from owners at every stage of the journey.</p>
+                    </div>
+                    <div style={{ flex: "1 1 200px", background: "rgba(8,126,139,0.08)", borderRadius: "6px", padding: "1rem 1.25rem" }}>
+                      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.teal, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.4rem", fontWeight: 700 }}>The Framework</div>
+                      <p style={{ fontSize: "0.85rem", color: BRAND.lightGray, lineHeight: 1.5, margin: 0 }}>The full 7 Levels × 9 P's map — so you always know exactly where you are and what to work on next.</p>
+                    </div>
+                  </div>
+
+                  <div style={{ background: BRAND.dark3, borderRadius: "6px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "1.25rem", flexWrap: "wrap" }}>
+                    <div style={{ flex: "1 1 300px" }}>
+                      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.6rem", color: BRAND.coral, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.3rem", fontWeight: 700 }}>
+                        Recommended for You
+                      </div>
+                      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.1rem", fontWeight: 700, color: BRAND.offWhite, marginBottom: "0.3rem" }}>
+                        {resource.title}
+                      </div>
+                      <p style={{ fontSize: "0.8rem", color: BRAND.gray, lineHeight: 1.5, margin: 0 }}>
+                        Your constraint is <strong style={{ color: BRAND.offWhite }}>{constraintP}</strong>. This playbook has the fix sequence, the one move at every level, and the tools to start this week. Free inside the community.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: "center" }}>
+                    <a href={SKOOL_URL} target="_blank" rel="noopener noreferrer" className="btn-gold" style={{ display: "inline-block", padding: "1.2rem 3rem" }}>
+                      Join the Community — Free
+                    </a>
+                    <p style={{ fontSize: "0.75rem", color: BRAND.gray, marginTop: "0.75rem" }}>
+                      Free to join. No credit card. No pitch.
                     </p>
                   </div>
                 </div>
