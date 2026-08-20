@@ -5,6 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#1C1C1C">
+
+    <!-- Favicon (TAL segmented starburst brand mark) -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
     <title>The Autonomous Leader Self Assessment</title>
     <meta name="description" content="Get your map for every constraint across all 9 P's, specfic to your business. Reveal where you're strong, where you're stuck, and what to do next.">
 
@@ -57,7 +64,7 @@
     </noscript>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
 
 // ─── API CONFIGURATION ──────────────────────────────────────────────────────
 const API_BASE = "";
@@ -534,6 +541,71 @@ const SOLUTION_LONG = {
 // ─── RESOURCE MAPPING ───────────────────────────────────────────────────────
 const SKOOL_URL = "https://www.skool.com/the-autonomous-leader-8930/about";
 
+// ─── SHARE LINKS ─────────────────────────────────────────────────────────────
+// Every completed assessment gets its own URL (/r/<shareId>) so a result can be
+// sent to a partner or a leadership team instead of screenshotted.
+
+const SHARE_PATH_PATTERN = /^\/r\/([A-Za-z0-9_-]{8,64})\/?$/;
+
+function getShareIdFromUrl() {
+  const match = window.location.pathname.match(SHARE_PATH_PATTERN);
+  return match ? match[1] : null;
+}
+
+function buildShareUrl(shareId) {
+  return window.location.origin + "/r/" + shareId;
+}
+
+// ─── ADMIN CONSOLE ───────────────────────────────────────────────────────────
+
+const ADMIN_PATH = "/admin";
+const ADMIN_PAGE_SIZE = 25;
+
+function isAdminPath() {
+  return window.location.pathname.replace(/\/$/, "") === ADMIN_PATH;
+}
+
+// SQLite stores timestamps as UTC without a zone marker.
+function formatTakenAt(value) {
+  if (!value) return "";
+  const parsed = new Date(String(value).replace(" ", "T") + "Z");
+  if (Number.isNaN(parsed.getTime())) return String(value);
+  return parsed.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function formatTakenAtLong(value) {
+  if (!value) return "";
+  const parsed = new Date(String(value).replace(" ", "T") + "Z");
+  if (Number.isNaN(parsed.getTime())) return String(value);
+  return parsed.toLocaleString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text);
+  }
+
+  // Older browsers and non-secure origins: fall back to a throwaway field.
+  return new Promise((resolve, reject) => {
+    const field = document.createElement("textarea");
+    field.value = text;
+    field.setAttribute("readonly", "");
+    field.style.position = "fixed";
+    field.style.top = "-1000px";
+    field.style.opacity = "0";
+    document.body.appendChild(field);
+    field.select();
+    try {
+      if (document.execCommand("copy")) resolve();
+      else reject(new Error("Copy command was rejected."));
+    } catch (err) {
+      reject(err);
+    } finally {
+      document.body.removeChild(field);
+    }
+  });
+}
+
 const P_RESOURCES = {
   Pipeline: { title: "The Pipeline Playbook", desc: "How to build a demand engine that creates business on purpose — without you being the one who drives it.", cta: "Download the Pipeline Playbook →" },
   Profit: { title: "The Profit Playbook", desc: "How to understand what your money is actually doing — so you can stop guessing and start deciding.", cta: "Download the Profit Playbook →" },
@@ -991,8 +1063,376 @@ function BrandMarkChart({ pLevels, onBladeHover, hoveredBlade }) {
 }
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+// ─── SHARE BLOCK ─────────────────────────────────────────────────────────────
+// The result's own link, plus the handful of places people actually send it.
+const SHARE_COPY = {
+  owner: {
+    eyebrow: "Share Your Result",
+    heading: "Your result has its own link.",
+    blurb: "Send it to your business partner, your leadership team, or another owner sitting at the same level. They see the full diagnosis without taking the assessment first.",
+  },
+  shared: {
+    eyebrow: "Pass It On",
+    heading: "This result has its own link.",
+    blurb: "Send it to anyone who should see this diagnosis. The link opens the full breakdown, no assessment required.",
+  },
+  admin: {
+    eyebrow: "Client Link",
+    heading: "This result has its own link.",
+    blurb: "Send it to them after the call so they can revisit the diagnosis on their own time.",
+  },
+};
+
+function ShareBlock({ id, shareUrl, shareMessage, variant }) {
+  const copy = SHARE_COPY[variant] || SHARE_COPY.owner;
+  const [copyState, setCopyState] = useState("idle"); // idle | copied | failed
+
+  // Reset the button label a few seconds after a copy attempt.
+  useEffect(() => {
+    if (copyState === "idle") return undefined;
+    const timer = setTimeout(() => setCopyState("idle"), 2600);
+    return () => clearTimeout(timer);
+  }, [copyState]);
+
+  const handleCopy = () => {
+    copyToClipboard(shareUrl)
+      .then(() => setCopyState("copied"))
+      .catch(() => setCopyState("failed"));
+  };
+
+  const canNativeShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
+
+  const handleNativeShare = () => {
+    navigator.share({
+      title: "The Autonomous Leader Assessment",
+      text: shareMessage,
+      url: shareUrl,
+    }).catch(() => {}); // Sheet dismissed. Nothing to recover from.
+  };
+
+  const encodedUrl = encodeURIComponent(shareUrl);
+  const targets = [
+    { label: "Email", href: "mailto:?subject=" + encodeURIComponent("My business assessment result") + "&body=" + encodeURIComponent(shareMessage + "\n\n" + shareUrl) },
+    { label: "LinkedIn", href: "https://www.linkedin.com/sharing/share-offsite/?url=" + encodedUrl },
+    { label: "X", href: "https://twitter.com/intent/tweet?text=" + encodeURIComponent(shareMessage) + "&url=" + encodedUrl },
+    { label: "WhatsApp", href: "https://wa.me/?text=" + encodeURIComponent(shareMessage + " " + shareUrl) },
+  ];
+
+  const copyLabel = copyState === "copied" ? "Copied" : copyState === "failed" ? "Press Ctrl+C" : "Copy Link";
+
+  return (
+    <div id={id} style={{
+      background: "linear-gradient(135deg, rgba(8,126,139,0.12) 0%, rgba(8,126,139,0.04) 100%)",
+      border: "1px solid rgba(8,126,139,0.25)", borderRadius: "8px",
+      padding: "2rem", marginBottom: "3rem",
+    }}>
+      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", color: BRAND.teal, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "0.75rem", fontWeight: 700 }}>
+        {copy.eyebrow}
+      </div>
+      <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.35rem", fontWeight: 700, color: BRAND.offWhite, marginTop: 0, marginBottom: "0.75rem", lineHeight: 1.3 }}>
+        {copy.heading}
+      </h3>
+      <p style={{ fontSize: "0.9rem", color: BRAND.gray, lineHeight: 1.7, marginTop: 0, marginBottom: "1.5rem" }}>
+        {copy.blurb}
+      </p>
+
+      <div className="share-row" style={{ marginBottom: "1.25rem" }}>
+        <input
+          className="share-input"
+          type="text"
+          readOnly
+          value={shareUrl}
+          aria-label="Link to this result"
+          onFocus={e => e.target.select()}
+          onClick={e => e.target.select()}
+        />
+        <button className="share-copy" onClick={handleCopy} aria-live="polite">
+          {copyLabel}
+        </button>
+      </div>
+
+      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+        <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.6rem", color: BRAND.gray, letterSpacing: "0.15em", textTransform: "uppercase", marginRight: "0.25rem" }}>
+          Send via
+        </span>
+        {canNativeShare && (
+          <button className="share-chip" onClick={handleNativeShare} style={{ border: "1px solid rgba(8,126,139,0.45)", color: BRAND.paleTeal }}>
+            Share&hellip;
+          </button>
+        )}
+        {targets.map(target => (
+          <a key={target.label} className="share-chip" href={target.href} target="_blank" rel="noopener noreferrer">
+            {target.label}
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── SHARED VIEW BANNER ──────────────────────────────────────────────────────
+// Shown when someone opens another person's result link.
+function SharedViewBanner({ firstName }) {
+  const owner = firstName || "Someone";
+  return (
+    <div style={{
+      background: "rgba(8,126,139,0.10)", border: "1px solid rgba(8,126,139,0.3)",
+      borderRadius: "8px", padding: "1.25rem 1.5rem", marginBottom: "2rem",
+      display: "flex", gap: "1.25rem", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap",
+    }}>
+      <div style={{ flex: "1 1 320px" }}>
+        <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.6rem", color: BRAND.teal, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "0.4rem", fontWeight: 700 }}>
+          Shared Result
+        </div>
+        <p style={{ fontSize: "0.95rem", color: BRAND.offWhite, lineHeight: 1.6, margin: 0 }}>
+          {owner} shared their assessment result with you. What follows is their diagnosis, not yours.
+        </p>
+      </div>
+      <a href="/" className="btn-gold" style={{ padding: "0.9rem 1.75rem", fontSize: "0.7rem", whiteSpace: "nowrap" }}>
+        Take Your Own &rarr;
+      </a>
+    </div>
+  );
+}
+
+// ─── TAKE YOUR OWN CTA ───────────────────────────────────────────────────────
+function TakeYourOwnCta({ firstName }) {
+  const owner = firstName ? firstName + "'s" : "one owner's";
+  return (
+    <div style={{
+      textAlign: "center", background: BRAND.dark2,
+      border: "1px solid rgba(138,155,176,0.12)", borderRadius: "8px",
+      padding: "2.5rem 2rem", marginTop: "2rem",
+    }}>
+      <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.4rem", fontWeight: 700, color: BRAND.offWhite, marginTop: 0, marginBottom: "1rem", lineHeight: 1.35 }}>
+        You have seen {owner} diagnosis. Now find yours.
+      </h3>
+      <p style={{ fontSize: "0.95rem", color: BRAND.gray, lineHeight: 1.7, maxWidth: 480, margin: "0 auto 2rem" }}>
+        Same questions, scored against the same 7 Levels. The in-depth version takes 10 minutes and maps all 9 P's. The quick version takes 3.
+      </p>
+      <a href="/" className="btn-gold">
+        Take the Assessment
+      </a>
+    </div>
+  );
+}
+
+// ─── ADMIN: SIGN IN ──────────────────────────────────────────────────────────
+function AdminLogin({ onSignedIn, notice }) {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!password || submitting) return;
+
+    setSubmitting(true);
+    setError(null);
+
+    fetch(API_BASE + "/api/admin/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    })
+      .then(res => res.json().then(body => ({ ok: res.ok, body })))
+      .then(({ ok, body }) => {
+        setSubmitting(false);
+        if (ok && body.success) {
+          setPassword("");
+          onSignedIn();
+          return;
+        }
+        setError((body.errors && body.errors[0]) || "Sign in failed.");
+      })
+      .catch(() => {
+        setSubmitting(false);
+        setError("Could not reach the server. Try again.");
+      });
+  };
+
+  return (
+    <div className="fade-wrap" style={{ maxWidth: 420, width: "100%", textAlign: "center" }}>
+      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", letterSpacing: "0.25em", fontWeight: 700, color: BRAND.teal, textTransform: "uppercase", marginBottom: "1.5rem" }}>
+        The Autonomous Leader
+      </div>
+      <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.8rem", fontWeight: 800, marginBottom: "0.75rem" }}>
+        Assessment Console
+      </h1>
+      <p style={{ fontSize: "0.9rem", color: BRAND.gray, lineHeight: 1.7, marginBottom: "2rem" }}>
+        Sign in to open any completed assessment.
+      </p>
+
+      {notice && (
+        <p style={{ fontSize: "0.85rem", color: BRAND.coral, lineHeight: 1.6, marginTop: 0, marginBottom: "1.5rem" }}>
+          {notice}
+        </p>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <input
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          placeholder="Password"
+          autoFocus
+          autoComplete="current-password"
+          aria-label="Admin password"
+          style={{
+            width: "100%", padding: "1rem 1.1rem", marginBottom: "1rem",
+            background: BRAND.dark2, color: BRAND.offWhite,
+            border: "1px solid rgba(138,155,176,0.25)", borderRadius: "6px",
+            fontFamily: "'DM Sans', sans-serif", fontSize: "1rem",
+          }}
+        />
+        {error && (
+          <p style={{ fontSize: "0.85rem", color: BRAND.coral, lineHeight: 1.6, marginTop: 0, marginBottom: "1rem" }}>
+            {error}
+          </p>
+        )}
+        <button type="submit" className="btn-gold" style={{ width: "100%" }} disabled={submitting}>
+          {submitting ? "Signing In..." : "Sign In"}
+        </button>
+      </form>
+
+      <a href="/" style={{ display: "inline-block", marginTop: "1.75rem", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", letterSpacing: "0.15em", textTransform: "uppercase", color: BRAND.gray, textDecoration: "none" }}>
+        &larr; Back to the assessment
+      </a>
+    </div>
+  );
+}
+
+// ─── ADMIN: ASSESSMENT LIST ──────────────────────────────────────────────────
+const TYPE_LABELS = { quick: "Quick", deep: "In-Depth" };
+
+function AdminList({ items, total, offset, search, loading, error, onSearch, onPage, onOpen, onSignOut }) {
+  const firstShown = total === 0 ? 0 : offset + 1;
+  const lastShown = Math.min(offset + ADMIN_PAGE_SIZE, total);
+
+  return (
+    <div className="fade-wrap" style={{ maxWidth: 1080, width: "100%" }}>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
+        <div>
+          <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", letterSpacing: "0.25em", fontWeight: 700, color: BRAND.teal, textTransform: "uppercase", marginBottom: "0.5rem" }}>
+            Assessment Console
+          </div>
+          <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.9rem", fontWeight: 800, margin: 0 }}>
+            Completed Assessments
+          </h1>
+        </div>
+        <button className="btn-ghost" onClick={onSignOut} style={{ padding: "0.7rem 1.5rem", fontSize: "0.65rem" }}>
+          Sign Out
+        </button>
+      </div>
+
+      <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap", marginBottom: "1.25rem" }}>
+        <input
+          type="search"
+          value={search}
+          onChange={e => onSearch(e.target.value)}
+          placeholder="Search by name or email"
+          aria-label="Search assessments"
+          style={{
+            flex: "1 1 260px", padding: "0.8rem 1rem",
+            background: BRAND.dark2, color: BRAND.offWhite,
+            border: "1px solid rgba(138,155,176,0.25)", borderRadius: "6px",
+            fontFamily: "'DM Sans', sans-serif", fontSize: "0.9rem",
+          }}
+        />
+        <span style={{ fontSize: "0.8rem", color: BRAND.gray, whiteSpace: "nowrap" }}>
+          {loading ? "Loading..." : total === 0 ? "No results" : `Showing ${firstShown}\u2013${lastShown} of ${total}`}
+        </span>
+      </div>
+
+      {error && (
+        <p style={{ fontSize: "0.85rem", color: BRAND.coral, lineHeight: 1.6 }}>{error}</p>
+      )}
+
+      <div style={{ overflowX: "auto", border: "1px solid rgba(138,155,176,0.12)", borderRadius: "8px" }}>
+        <div style={{ minWidth: 820 }}>
+          <div className="admin-row admin-head">
+            <span>Taken</span>
+            <span>Name</span>
+            <span>Email</span>
+            <span>Type</span>
+            <span>Level</span>
+            <span>Constraint</span>
+            <span>Call</span>
+          </div>
+
+          {items.map(item => (
+            <button key={item.id} className="admin-row admin-row-btn" onClick={() => onOpen(item.id)}>
+              <span style={{ color: BRAND.gray }}>{formatTakenAt(item.createdAt)}</span>
+              <span style={{ color: BRAND.offWhite, fontWeight: 500 }}>{item.firstName || "\u2014"}</span>
+              <span style={{ color: BRAND.gray, overflow: "hidden", textOverflow: "ellipsis" }}>{item.email}</span>
+              <span style={{ color: BRAND.gray }}>{TYPE_LABELS[item.assessmentType] || item.assessmentType}</span>
+              <span style={{ color: BRAND.paleTeal, fontWeight: 600 }}>L{item.levelResult}</span>
+              <span style={{ color: item.primaryConstraint ? BRAND.coral : BRAND.gray }}>{item.primaryConstraint || "\u2014"}</span>
+              <span style={{ color: item.flagged ? BRAND.teal : "rgba(138,155,176,0.3)", fontWeight: 700 }}>{item.flagged ? "Yes" : "\u2014"}</span>
+            </button>
+          ))}
+
+          {!loading && items.length === 0 && (
+            <div style={{ padding: "2.5rem 1.25rem", textAlign: "center", color: BRAND.gray, fontSize: "0.9rem" }}>
+              {search ? "Nobody matches that search." : "No assessments yet."}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", marginTop: "1.25rem" }}>
+        <button className="btn-ghost" onClick={() => onPage(Math.max(0, offset - ADMIN_PAGE_SIZE))} disabled={offset === 0}
+          style={{ padding: "0.7rem 1.5rem", fontSize: "0.65rem", opacity: offset === 0 ? 0.35 : 1 }}>
+          &larr; Newer
+        </button>
+        <button className="btn-ghost" onClick={() => onPage(offset + ADMIN_PAGE_SIZE)} disabled={lastShown >= total}
+          style={{ padding: "0.7rem 1.5rem", fontSize: "0.65rem", opacity: lastShown >= total ? 0.35 : 1 }}>
+          Older &rarr;
+        </button>
+      </div>
+
+      <div style={{ textAlign: "center", marginTop: "2rem" }}>
+        <a href="/" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.65rem", letterSpacing: "0.15em", textTransform: "uppercase", color: BRAND.gray, textDecoration: "none" }}>
+          &larr; Back to the assessment
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ─── ADMIN: WHO THIS RESULT BELONGS TO ───────────────────────────────────────
+function AdminRecordBar({ record, onBack }) {
+  return (
+    <div style={{
+      background: BRAND.dark2, border: "1px solid rgba(8,126,139,0.3)",
+      borderRadius: "8px", padding: "1.25rem 1.5rem", marginBottom: "2rem",
+      display: "flex", gap: "1.25rem", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap",
+    }}>
+      <div style={{ flex: "1 1 320px" }}>
+        <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.6rem", color: BRAND.teal, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "0.4rem", fontWeight: 700 }}>
+          Client Record
+        </div>
+        <p style={{ fontSize: "1rem", color: BRAND.offWhite, lineHeight: 1.5, margin: "0 0 0.25rem" }}>
+          {record.firstName || "No name given"} &middot; {record.email}
+        </p>
+        <p style={{ fontSize: "0.8rem", color: BRAND.gray, lineHeight: 1.5, margin: 0 }}>
+          {TYPE_LABELS[record.assessmentType] || record.assessmentType} assessment, taken {formatTakenAtLong(record.createdAt)}
+          {record.flagged ? " \u00b7 asked to be contacted" : ""}
+        </p>
+      </div>
+      <button className="btn-ghost" onClick={onBack} style={{ padding: "0.8rem 1.5rem", fontSize: "0.65rem", whiteSpace: "nowrap" }}>
+        &larr; All Assessments
+      </button>
+    </div>
+  );
+}
+
 function SelfAssessment() {
-  const [screen, setScreen] = useState("intro");
+  // A /r/<shareId> URL opens straight into someone's saved result.
+  const [screen, setScreen] = useState(() => {
+    if (getShareIdFromUrl()) return "shared-loading";
+    return isAdminPath() ? "admin-loading" : "intro";
+  });
   const [assessmentType, setAssessmentType] = useState(null);
   const [flagged, setFlagged] = useState(false);
   const [outreachDismissed, setOutreachDismissed] = useState(false);
@@ -1009,6 +1449,22 @@ function SelfAssessment() {
   const [hoveredBlade, setHoveredBlade] = useState(null);
   const [expandedP, setExpandedP] = useState(null);
   const [assessmentCount, setAssessmentCount] = useState(null);
+  const [shareId, setShareId] = useState(null);
+  const [sharedView, setSharedView] = useState(false);
+  const [shareLoadError, setShareLoadError] = useState(null);
+
+  // Admin console state. `adminView` means the operator is looking at someone
+  // else's result, so none of the taker's own actions belong on screen.
+  const [adminAuthed, setAdminAuthed] = useState(false);
+  const [adminView, setAdminView] = useState(false);
+  const [adminRecord, setAdminRecord] = useState(null);
+  const [adminItems, setAdminItems] = useState([]);
+  const [adminTotal, setAdminTotal] = useState(0);
+  const [adminOffset, setAdminOffset] = useState(0);
+  const [adminSearch, setAdminSearch] = useState("");
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [adminError, setAdminError] = useState(null);
+  const adminSearchTimer = useRef(null);
 
   // Fetch counter on mount
   useEffect(() => {
@@ -1019,6 +1475,222 @@ function SelfAssessment() {
       })
       .catch(() => {}); // Fail silently — counter is social proof, not critical
   }, []);
+
+  // Rebuilds the exact result from the stored answers, so a shared link, the
+  // console and the original page always show the same diagnosis.
+  const showStoredResult = (data) => {
+    setAssessmentType(data.assessmentType);
+
+    if (data.assessmentType === "deep") {
+      const rebuilt = calculateDeepResult(data.deepAnswers);
+      setDeepAnswers(data.deepAnswers);
+      setDeepResult(rebuilt);
+      setExpandedP(rebuilt.primaryConstraint);
+      setScreen("deep-result");
+      return;
+    }
+
+    setAnswers(data.individualAnswers);
+    setResult(calculateResult(data.individualAnswers));
+    setScreen("result");
+  };
+
+  const hydrateSharedResult = (data) => {
+    setSharedView(true);
+    setShareId(data.shareId);
+    setFirstName(data.firstName || "");
+    showStoredResult(data);
+  };
+
+  useEffect(() => {
+    const urlShareId = getShareIdFromUrl();
+    if (!urlShareId) return undefined;
+
+    let cancelled = false;
+
+    fetch(API_BASE + "/api/result/" + urlShareId)
+      .then(res => res.json())
+      .then(data => {
+        if (cancelled) return;
+        if (data.success && data.data) {
+          hydrateSharedResult(data.data);
+        } else {
+          setShareLoadError("That results link is no longer available.");
+          setScreen("intro");
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setShareLoadError("We could not load that result. Check the link and try again.");
+        setScreen("intro");
+      });
+
+    return () => { cancelled = true; };
+  }, []);
+
+  // ─── Admin console ────────────────────────────────────────────────────────
+
+  const loadAdminList = (options) => {
+    const offset = options && options.offset ? options.offset : 0;
+    const search = options && options.search ? options.search : "";
+
+    setAdminLoading(true);
+    setAdminError(null);
+
+    const params = new URLSearchParams({ limit: String(ADMIN_PAGE_SIZE), offset: String(offset) });
+    if (search) params.set("search", search);
+
+    fetch(API_BASE + "/api/admin/assessments?" + params.toString())
+      .then(res => res.json().then(body => ({ status: res.status, body })))
+      .then(({ status, body }) => {
+        setAdminLoading(false);
+        if (status === 401) {
+          setAdminAuthed(false);
+          setScreen("admin-login");
+          return;
+        }
+        if (!body.success) {
+          setAdminError((body.errors && body.errors[0]) || "Could not load assessments.");
+          return;
+        }
+        setAdminItems(body.data.items);
+        setAdminTotal(body.data.total);
+        setAdminOffset(body.data.offset);
+      })
+      .catch(() => {
+        setAdminLoading(false);
+        setAdminError("Could not reach the server. Try again.");
+      });
+  };
+
+  const checkAdminSession = () => {
+    setAdminError(null);
+
+    return fetch(API_BASE + "/api/admin/session")
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success || !data.data.adminEnabled) {
+          setAdminError("Admin access is not configured on this server.");
+          setScreen("admin-login");
+          return;
+        }
+        if (data.data.authenticated) {
+          setAdminAuthed(true);
+          setScreen("admin-list");
+          loadAdminList({ offset: 0, search: "" });
+          return;
+        }
+        setScreen("admin-login");
+      })
+      .catch(() => {
+        setAdminError("Could not reach the server. Try again.");
+        setScreen("admin-login");
+      });
+  };
+
+  useEffect(() => {
+    if (!isAdminPath()) return;
+    checkAdminSession();
+  }, []);
+
+  const handleOpenAdmin = () => {
+    if (window.location.pathname !== ADMIN_PATH) {
+      window.history.pushState({}, "", ADMIN_PATH);
+    }
+    transition(() => {
+      setScreen("admin-loading");
+      checkAdminSession();
+    });
+  };
+
+  const handleAdminSignedIn = () => {
+    setAdminAuthed(true);
+    setAdminError(null);
+    setScreen("admin-list");
+    loadAdminList({ offset: 0, search: "" });
+  };
+
+  const handleAdminSignOut = () => {
+    fetch(API_BASE + "/api/admin/logout", { method: "POST" })
+      .catch(() => {}) // The cookie is server-side; a failed call just leaves it in place.
+      .then(() => {
+        setAdminAuthed(false);
+        setAdminItems([]);
+        setAdminTotal(0);
+        setAdminOffset(0);
+        setAdminSearch("");
+        setScreen("admin-login");
+      });
+  };
+
+  // Typing filters the list, but only after a short pause.
+  const handleAdminSearch = (value) => {
+    setAdminSearch(value);
+    if (adminSearchTimer.current) clearTimeout(adminSearchTimer.current);
+    adminSearchTimer.current = setTimeout(() => {
+      loadAdminList({ offset: 0, search: value.trim() });
+    }, 300);
+  };
+
+  const handleAdminPage = (offset) => {
+    loadAdminList({ offset, search: adminSearch.trim() });
+  };
+
+  const openAdminRecord = (id) => {
+    setAdminLoading(true);
+    setAdminError(null);
+
+    fetch(API_BASE + "/api/admin/assessments/" + id)
+      .then(res => res.json().then(body => ({ status: res.status, body })))
+      .then(({ status, body }) => {
+        setAdminLoading(false);
+        if (status === 401) {
+          setAdminAuthed(false);
+          setScreen("admin-login");
+          return;
+        }
+        if (!body.success) {
+          setAdminError((body.errors && body.errors[0]) || "Could not open that assessment.");
+          return;
+        }
+
+        const record = body.data;
+        setAdminView(true);
+        setSharedView(false);
+        setAdminRecord(record);
+        setShareId(record.shareId);
+        setFirstName(record.firstName || "");
+        setEmail(record.email || "");
+        setFlagged(Boolean(record.flagged));
+        setOutreachDismissed(false);
+        showStoredResult(record);
+        window.scrollTo({ top: 0, behavior: "auto" });
+      })
+      .catch(() => {
+        setAdminLoading(false);
+        setAdminError("Could not reach the server. Try again.");
+      });
+  };
+
+  const backToAdminList = () => {
+    setIsFading(true);
+    setTimeout(() => {
+      setAdminView(false);
+      setAdminRecord(null);
+      setShareId(null);
+      setResult(null);
+      setAnswers([]);
+      setDeepResult(null);
+      setDeepAnswers([]);
+      setFirstName("");
+      setEmail("");
+      setFlagged(false);
+      setExpandedP(null);
+      setScreen("admin-list");
+      setIsFading(false);
+    }, 250);
+    loadAdminList({ offset: adminOffset, search: adminSearch.trim() });
+  };
 
   const transition = (fn) => {
     setIsFading(true);
@@ -1129,6 +1801,7 @@ function SelfAssessment() {
         if (data.success) {
           if (data.data.counter) setAssessmentCount(data.data.counter);
           if (data.data.id) setAssessmentId(data.data.id);
+          if (data.data.shareId) setShareId(data.data.shareId);
         }
       })
       .catch(err => console.warn("Assessment submission failed:", err));
@@ -1145,6 +1818,11 @@ function SelfAssessment() {
 
   const handleStartOver = () => {
     setIsFading(true);
+    // A shared link in the address bar would reload back into someone else's
+    // result, so drop it before restarting.
+    if (getShareIdFromUrl()) {
+      window.history.replaceState({}, "", "/");
+    }
     setTimeout(() => {
       setScreen("intro");
       setAssessmentType(null);
@@ -1160,6 +1838,9 @@ function SelfAssessment() {
       setHoveredBlade(null);
       setExpandedP(null);
       setReminderSet(false);
+      setShareId(null);
+      setSharedView(false);
+      setShareLoadError(null);
       setIsFading(false);
     }, 350);
   };
@@ -1231,6 +1912,9 @@ function SelfAssessment() {
 
   const reminderDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
+  const shareUrl = shareId ? buildShareUrl(shareId) : null;
+  const resultOwner = sharedView ? (firstName || "a business owner") : (firstName || email);
+
   const level = result ? result.level : null;
   const res = level ? results[level] : null;
   const deepLevel = deepResult ? deepResult.overallLevel : null;
@@ -1273,6 +1957,57 @@ function SelfAssessment() {
         }
         .btn-ghost:hover { border-color: rgba(138,155,176,0.5); color: ${BRAND.offWhite}; }
 
+        .share-row { display: flex; gap: 0.75rem; align-items: stretch; }
+        .share-input {
+          flex: 1 1 auto; min-width: 0;
+          background: rgba(28,28,28,0.75); color: ${BRAND.offWhite};
+          border: 1px solid rgba(138,155,176,0.25); border-radius: 6px;
+          padding: 0.9rem 1rem; font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+          text-overflow: ellipsis;
+        }
+        .share-input:focus { outline: none; border-color: ${BRAND.teal}; }
+        .share-copy {
+          flex: 0 0 auto; background: ${BRAND.teal}; color: ${BRAND.offWhite};
+          border: none; border-radius: 6px; padding: 0.9rem 1.5rem; cursor: pointer;
+          font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; font-weight: 700;
+          letter-spacing: 0.12em; text-transform: uppercase; transition: all 0.2s;
+          white-space: nowrap;
+        }
+        .share-copy:hover { background: #0a6e78; }
+        .share-copy:focus-visible { outline: 2px solid ${BRAND.paleTeal}; outline-offset: 2px; }
+        .share-chip {
+          background: rgba(138,155,176,0.08); border: 1px solid rgba(138,155,176,0.18);
+          border-radius: 20px; padding: 0.5rem 1.1rem; cursor: pointer;
+          font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.65rem; font-weight: 600;
+          letter-spacing: 0.1em; text-transform: uppercase; color: ${BRAND.gray};
+          text-decoration: none; transition: all 0.2s; display: inline-block;
+        }
+        .share-chip:hover { color: ${BRAND.offWhite}; border-color: rgba(8,126,139,0.5); }
+        .share-chip:focus-visible { outline: 2px solid ${BRAND.teal}; outline-offset: 2px; }
+
+        .admin-row {
+          display: grid;
+          grid-template-columns: 110px 130px minmax(200px, 1fr) 90px 70px 130px 70px;
+          gap: 0.75rem; align-items: center;
+          padding: 0.85rem 1.25rem;
+          font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+          text-align: left; width: 100%;
+          border-bottom: 1px solid rgba(138,155,176,0.08);
+        }
+        .admin-row > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .admin-head {
+          font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.6rem;
+          letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700;
+          color: ${BRAND.gray}; background: rgba(138,155,176,0.05);
+          position: sticky; top: 0;
+        }
+        .admin-row-btn {
+          background: transparent; border: none; border-bottom: 1px solid rgba(138,155,176,0.08);
+          cursor: pointer; transition: background 0.15s;
+        }
+        .admin-row-btn:hover { background: rgba(8,126,139,0.10); }
+        .admin-row-btn:focus-visible { outline: 2px solid ${BRAND.teal}; outline-offset: -2px; }
+
         .answer-btn {
           width: 100%; text-align: left; padding: 1.5rem 2rem;
           background: ${BRAND.offWhite}; border: 1.5px solid ${BRAND.paleTeal};
@@ -1295,6 +2030,8 @@ function SelfAssessment() {
         .p-row-btn:focus-visible { outline: 2px solid ${BRAND.teal}; outline-offset: -2px; }
 
         @media (max-width: 600px) {
+          .share-row { flex-direction: column; }
+          .share-copy { width: 100%; }
           .answer-btn { padding: 1.2rem 1.2rem; gap: 1rem; font-size: 0.95rem; }
           .cs-grid { grid-template-columns: 1fr !important; }
           .pb-grid { grid-template-columns: 1fr !important; }
@@ -1312,8 +2049,8 @@ function SelfAssessment() {
         pointerEvents: "none", zIndex: 0
       }} />
 
-      {screen !== "intro" && screen !== "analyzing" && (
-        <button onClick={handleStartOver} style={{
+      {screen !== "intro" && screen !== "analyzing" && screen !== "shared-loading" && !screen.startsWith("admin-") && (
+        <button onClick={adminView ? backToAdminList : handleStartOver} style={{
           position: "fixed", top: "1.25rem", left: "1.25rem", zIndex: 50,
           background: "rgba(28,28,28,0.85)", backdropFilter: "blur(8px)",
           border: "1px solid rgba(138,155,176,0.15)", borderRadius: "6px",
@@ -1325,7 +2062,7 @@ function SelfAssessment() {
         onMouseOver={function(e) { e.currentTarget.style.color = BRAND.offWhite; e.currentTarget.style.borderColor = "rgba(138,155,176,0.4)"; }}
         onMouseOut={function(e) { e.currentTarget.style.color = BRAND.gray; e.currentTarget.style.borderColor = "rgba(138,155,176,0.15)"; }}
         >
-          <span style={{ fontSize: "0.9rem" }}>&larr;</span> Start Over
+          <span style={{ fontSize: "0.9rem" }}>&larr;</span> {adminView ? "All Assessments" : sharedView ? "Take Your Own" : "Start Over"}
         </button>
       )}
 
@@ -1335,12 +2072,76 @@ function SelfAssessment() {
         padding: "60px 20px"
       }}>
 
+        {/* ── ADMIN CONSOLE ── */}
+        {screen === "admin-loading" && (
+          <div className="fade-wrap" style={{ maxWidth: 420, textAlign: "center" }}>
+            <p style={{ fontSize: "0.95rem", color: BRAND.gray, lineHeight: 1.7 }}>
+              Opening the console.
+            </p>
+          </div>
+        )}
+
+        {screen === "admin-login" && (
+          <AdminLogin onSignedIn={handleAdminSignedIn} notice={adminError} />
+        )}
+
+        {screen === "admin-list" && (
+          <AdminList
+            items={adminItems}
+            total={adminTotal}
+            offset={adminOffset}
+            search={adminSearch}
+            loading={adminLoading}
+            error={adminError}
+            onSearch={handleAdminSearch}
+            onPage={handleAdminPage}
+            onOpen={openAdminRecord}
+            onSignOut={handleAdminSignOut}
+          />
+        )}
+
+        {/* ── SHARED RESULT LOADING ── */}
+        {screen === "shared-loading" && (
+          <div className="fade-wrap" style={{ maxWidth: 520, textAlign: "center" }}>
+            <style>{`
+              @keyframes sharePulse {
+                0%, 100% { opacity: 0.3; transform: scale(0.8); }
+                50% { opacity: 1; transform: scale(1.1); }
+              }
+            `}</style>
+            <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "2rem" }}>
+              {[0, 1, 2].map(i => (
+                <div key={i} style={{
+                  width: 10, height: 10, borderRadius: "50%", background: BRAND.teal,
+                  animation: "sharePulse 1.2s ease-in-out infinite",
+                  animationDelay: (i * 0.2) + "s",
+                }} />
+              ))}
+            </div>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "1.6rem", fontWeight: 700, color: BRAND.offWhite, marginBottom: "0.75rem" }}>
+              Opening a shared result
+            </h2>
+            <p style={{ fontSize: "0.95rem", color: BRAND.gray, lineHeight: 1.7 }}>
+              One moment.
+            </p>
+          </div>
+        )}
+
         {/* ── INTRO ── */}
         {screen === "intro" && (
           <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 700, textAlign: "center" }}>
             <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", letterSpacing: "0.25em", fontWeight: 700, color: BRAND.teal, textTransform: "uppercase", marginBottom: "2rem" }}>
               The Autonomous Leader
             </div>
+            {shareLoadError && (
+              <div style={{
+                background: "rgba(255,90,95,0.08)", border: "1px solid rgba(255,90,95,0.3)",
+                borderRadius: "6px", padding: "1rem 1.25rem", marginBottom: "1.75rem",
+                fontSize: "0.9rem", color: BRAND.offWhite, lineHeight: 1.6,
+              }}>
+                {shareLoadError} You can still run your own below.
+              </div>
+            )}
             <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 800, lineHeight: 1.1, marginBottom: "1.5rem" }}>
               Where Are You <span style={{ color: BRAND.teal, fontStyle: "italic" }}>Stuck</span> Right Now?
             </h1>
@@ -1410,6 +2211,24 @@ function SelfAssessment() {
             <p style={{ fontSize: "1rem", color: BRAND.gray, lineHeight: 1.75, fontWeight: 400, maxWidth: 600 }}>
               You've built something real. You have clients, revenue, maybe even a team. And you're probably still the person everything runs through. This isn't a character flaw — it's a structural problem.
             </p>
+
+            {/* Operator entrance. Deliberately quiet — it is not for the reader. */}
+            <div style={{ marginTop: "3.5rem" }}>
+              <button
+                onClick={handleOpenAdmin}
+                aria-label="Sign in to the assessment console"
+                style={{
+                  background: "transparent", border: "none", cursor: "pointer", padding: "0.5rem 1rem",
+                  fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.6rem",
+                  letterSpacing: "0.25em", textTransform: "uppercase",
+                  color: "rgba(240,240,240,0.16)", transition: "color 0.2s",
+                }}
+                onMouseOver={function(e) { e.currentTarget.style.color = "rgba(240,240,240,0.55)"; }}
+                onMouseOut={function(e) { e.currentTarget.style.color = "rgba(240,240,240,0.16)"; }}
+              >
+                Console
+              </button>
+            </div>
           </div>
         )}
 
@@ -1637,8 +2456,13 @@ function SelfAssessment() {
         {screen === "result" && result && res && (
           <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 760, width: "100%", textAlign: "left" }}>
 
+            {adminView && adminRecord
+              ? <AdminRecordBar record={adminRecord} onBack={backToAdminList} />
+              : sharedView && <SharedViewBanner firstName={firstName} />}
+
             <SectionNav sections={[
               { id: "q-result", label: "Result" },
+              ...(shareUrl ? [{ id: "q-share", label: "Share" }] : []),
               { id: "q-signals", label: "Signals" },
               { id: "q-playbook", label: "Playbook" },
               { id: "q-next", label: "Next Move" },
@@ -1655,7 +2479,7 @@ function SelfAssessment() {
                 {res.body}
               </div>
               <p style={{ fontSize: "0.85rem", color: BRAND.gray, lineHeight: 1.6, maxWidth: 500, margin: "0 auto" }}>
-                Results for <span style={{ color: BRAND.offWhite }}>{firstName || email}</span>
+                Results for <span style={{ color: BRAND.offWhite }}>{resultOwner}</span>
               </p>
               <button onClick={handleDownloadPdf} disabled={pdfGenerating} style={{ marginTop: "1.5rem", padding: "0.7rem 1.5rem", fontSize: "0.7rem", background: "transparent", color: BRAND.teal, border: "1px solid " + BRAND.teal, borderRadius: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, letterSpacing: "0.05em", cursor: "pointer", transition: "all 0.2s" }}
                 onMouseEnter={e => { e.target.style.background = "rgba(8,126,139,0.15)"; e.target.style.borderColor = BRAND.paleTeal; }}
@@ -1663,6 +2487,15 @@ function SelfAssessment() {
                 {pdfGenerating ? "Generating..." : "Download PDF ↓"}
               </button>
             </div>
+
+            {shareUrl && (
+              <ShareBlock
+                id="q-share"
+                shareUrl={shareUrl}
+                shareMessage={"My result from The Autonomous Leader assessment: " + res.label + "."}
+                variant={adminView ? "admin" : sharedView ? "shared" : "owner"}
+              />
+            )}
 
             <div id="pdf-content">
             <div style={{ background: "linear-gradient(180deg, rgba(27,58,92,0.1) 0%, transparent 100%)", padding: "3rem", border: "1px solid rgba(46,109,164,0.15)", borderRadius: "4px", marginBottom: "4rem" }}>
@@ -1788,8 +2621,8 @@ function SelfAssessment() {
               );
             })()}
 
-            <div style={{ textAlign: "center", paddingTop: "1rem" }}>
-              {flagged ? (
+            <div style={{ textAlign: "center", paddingTop: sharedView || adminView ? 0 : "1rem" }}>
+              {adminView ? null : sharedView ? <TakeYourOwnCta firstName={firstName} /> : flagged ? (
                 <div style={{ display: "inline-block", textAlign: "left", background: "rgba(46,109,164,0.07)", border: "1px solid rgba(46,109,164,0.2)", padding: "2rem", maxWidth: 600, borderRadius: "4px" }}>
                   <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.accent, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
                     You're on our radar
@@ -1818,8 +2651,8 @@ function SelfAssessment() {
               )}
             </div>
 
-            <div style={{ textAlign: "center", padding: "2rem 0", borderTop: "1px solid rgba(138,155,176,0.08)", marginTop: "2rem" }}>
-              {!reminderSet ? (
+            <div style={{ textAlign: "center", padding: sharedView || adminView ? 0 : "2rem 0", borderTop: sharedView || adminView ? "none" : "1px solid rgba(138,155,176,0.08)", marginTop: sharedView || adminView ? 0 : "2rem" }}>
+              {sharedView || adminView ? null : !reminderSet ? (
                 <div>
                   <p style={{ fontSize: "0.9rem", color: BRAND.gray, marginBottom: "1rem", lineHeight: 1.6 }}>
                     Want to track your growth? Retake the assessment in 90 days and compare.
@@ -1843,8 +2676,13 @@ function SelfAssessment() {
         {screen === "deep-result" && deepResult && deepRes && (
           <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 820, width: "100%", textAlign: "left" }}>
 
+            {adminView && adminRecord
+              ? <AdminRecordBar record={adminRecord} onBack={backToAdminList} />
+              : sharedView && <SharedViewBanner firstName={firstName} />}
+
             <SectionNav sections={[
               { id: "d-profile", label: "Profile" },
+              ...(shareUrl ? [{ id: "d-share", label: "Share" }] : []),
               { id: "d-constraint", label: "Constraint" },
               { id: "d-breakdown", label: "Breakdown" },
               { id: "d-playbook", label: "Playbook" },
@@ -1862,7 +2700,7 @@ function SelfAssessment() {
                 {deepRes.body}
               </div>
               <p style={{ fontSize: "0.85rem", color: BRAND.gray, lineHeight: 1.6, maxWidth: 500, margin: "0 auto" }}>
-                Your business is as strong as its weakest P. Results for <span style={{ color: BRAND.offWhite }}>{firstName || email}</span>.
+                Your business is as strong as its weakest P. Results for <span style={{ color: BRAND.offWhite }}>{resultOwner}</span>.
               </p>
               <button onClick={handleDownloadPdf} disabled={pdfGenerating} style={{ marginTop: "1.5rem", padding: "0.7rem 1.5rem", fontSize: "0.7rem", background: "transparent", color: BRAND.teal, border: "1px solid " + BRAND.teal, borderRadius: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, letterSpacing: "0.05em", cursor: "pointer", transition: "all 0.2s" }}
                 onMouseEnter={e => { e.target.style.background = "rgba(8,126,139,0.15)"; e.target.style.borderColor = BRAND.paleTeal; }}
@@ -1870,6 +2708,15 @@ function SelfAssessment() {
                 {pdfGenerating ? "Generating..." : "Download PDF ↓"}
               </button>
             </div>
+
+            {shareUrl && (
+              <ShareBlock
+                id="d-share"
+                shareUrl={shareUrl}
+                shareMessage={"My 9P profile from The Autonomous Leader assessment: " + deepRes.label + ". Primary constraint: " + deepResult.primaryConstraint + "."}
+                variant={adminView ? "admin" : sharedView ? "shared" : "owner"}
+              />
+            )}
 
             <div id="pdf-content">
             {/* PDF-only header — hidden on screen, shown during PDF capture */}
@@ -1884,7 +2731,7 @@ function SelfAssessment() {
                 {deepRes.body}
               </div>
               <p style={{ fontSize: "0.8rem", color: "#999999", lineHeight: 1.5, maxWidth: 450, margin: "0 auto" }}>
-                Results for {firstName || email}
+                Results for {resultOwner}
               </p>
             </div>
 
@@ -2127,8 +2974,8 @@ function SelfAssessment() {
             </div>
             </div>{/* close pdf-content */}
 
-            <div style={{ textAlign: "center", paddingTop: "1rem" }}>
-              {flagged ? (
+            <div style={{ textAlign: "center", paddingTop: sharedView || adminView ? 0 : "1rem" }}>
+              {adminView ? null : sharedView ? <TakeYourOwnCta firstName={firstName} /> : flagged ? (
                 <div style={{ display: "inline-block", textAlign: "left", background: "rgba(46,109,164,0.07)", border: "1px solid rgba(46,109,164,0.2)", padding: "2rem", maxWidth: 600, borderRadius: "4px" }}>
                   <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.accent, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
                     You're on our radar
@@ -2157,8 +3004,8 @@ function SelfAssessment() {
               )}
             </div>
 
-            <div style={{ textAlign: "center", padding: "2rem 0", borderTop: "1px solid rgba(138,155,176,0.08)", marginTop: "2rem" }}>
-              {!reminderSet ? (
+            <div style={{ textAlign: "center", padding: sharedView || adminView ? 0 : "2rem 0", borderTop: sharedView || adminView ? "none" : "1px solid rgba(138,155,176,0.08)", marginTop: sharedView || adminView ? 0 : "2rem" }}>
+              {sharedView || adminView ? null : !reminderSet ? (
                 <div>
                   <p style={{ fontSize: "0.9rem", color: BRAND.gray, marginBottom: "1rem", lineHeight: 1.6 }}>
                     Want to track your growth? Retake the assessment in 90 days and compare.

@@ -26,6 +26,7 @@ function buildCustomFields(data) {
     tal_assessment_type: data.assessmentType,
     tal_constraint: data.primaryConstraint || "",
     tal_superpower: data.superpower || "",
+    tal_result_link: data.shareUrl || "",
   };
 
   // Individual P levels (deep assessment only)

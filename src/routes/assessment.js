@@ -1,6 +1,9 @@
 const express = require("express");
 const { buildTags } = require("../services/tag-builder");
 const { syncToKit } = require("../services/kit-integration");
+const { createUniqueShareId, isValidShareId } = require("../services/share-id");
+const { toPublicResult } = require("../services/public-result");
+const { buildShareUrl } = require("../services/share-page");
 
 const router = express.Router();
 
@@ -128,6 +131,10 @@ function createRoutes(repo) {
       superpower: body.superpower,
     });
 
+    // Unguessable public id for the shareable results link
+    const shareId = createUniqueShareId(candidate => repo.shareIdExists(candidate));
+    const shareUrl = buildShareUrl(shareId);
+
     // Insert assessment record
     const assessmentId = repo.insertAssessment({
       email: body.email,
@@ -142,6 +149,7 @@ function createRoutes(repo) {
       primaryConstraint: body.primaryConstraint,
       superpower: body.superpower,
       deepAnswers: body.deepAnswers,
+      shareId,
       tags,
     });
 
@@ -159,6 +167,7 @@ function createRoutes(repo) {
       pLevels: body.pLevels,
       primaryConstraint: body.primaryConstraint,
       superpower: body.superpower,
+      shareUrl,
     });
 
     // If Kit.com sync succeeded, mark it in the database
@@ -170,6 +179,8 @@ function createRoutes(repo) {
       success: true,
       data: {
         id: Number(assessmentId),
+        shareId,
+        shareUrl,
         counter: newCount,
         tags,
       },
@@ -207,10 +218,31 @@ function createRoutes(repo) {
         pLevels: row.p_levels ? JSON.parse(row.p_levels) : null,
         primaryConstraint: row.primary_constraint,
         superpower: row.superpower,
+        shareUrl: row.share_id ? buildShareUrl(row.share_id) : null,
       }).catch(err => console.error("[Kit.com] Flag re-sync error:", err.message));
     }
 
     res.json({ success: true });
+  });
+
+  // GET /api/result/:shareId — public, read-only view of one result.
+  // Anyone holding the link can read it; nothing here identifies the person
+  // beyond the first name they gave.
+  router.get("/result/:shareId", (req, res) => {
+    const { shareId } = req.params;
+
+    if (!isValidShareId(shareId)) {
+      return res.status(400).json({ success: false, errors: ["Invalid share id."] });
+    }
+
+    const row = repo.getAssessmentByShareId(shareId);
+    const result = toPublicResult(row);
+
+    if (!result) {
+      return res.status(404).json({ success: false, errors: ["That results link is no longer available."] });
+    }
+
+    res.json({ success: true, data: result });
   });
 
   // POST /api/reminder — 90-day retake reminder

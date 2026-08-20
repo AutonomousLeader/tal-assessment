@@ -1,10 +1,42 @@
 const fs = require("fs");
 const path = require("path");
 const Database = require("better-sqlite3");
+const { generateShareId } = require("../services/share-id");
 
 // Railway volume mount: set DATA_DIR env var to persistent storage path
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "../../data");
 const DB_PATH = path.join(DATA_DIR, "tal-assessment.db");
+
+// ─── Migrations ─────────────────────────────────────────────────────────────
+
+function hasColumn(db, table, column) {
+  return db.prepare(`PRAGMA table_info(${table})`).all().some(col => col.name === column);
+}
+
+// Adds share_id to databases created before shareable result links existed, and
+// gives every historical row an id so old results become shareable too.
+// Safe to run on every boot: the column check and the backfill are both no-ops
+// once they have run.
+function migrateShareIds(db) {
+  if (!hasColumn(db, "assessments", "share_id")) {
+    db.exec("ALTER TABLE assessments ADD COLUMN share_id TEXT");
+  }
+
+  // SQLite treats NULLs as distinct, so this holds while rows are being
+  // backfilled and stops two results ever answering to one link afterwards.
+  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_assessments_share_id ON assessments(share_id)");
+
+  const pending = db.prepare("SELECT id FROM assessments WHERE share_id IS NULL").all();
+  if (pending.length === 0) return 0;
+
+  const updateShareId = db.prepare("UPDATE assessments SET share_id = ? WHERE id = ?");
+  const backfill = db.transaction(rows => {
+    rows.forEach(row => updateShareId.run(generateShareId(), row.id));
+  });
+  backfill(pending);
+
+  return pending.length;
+}
 
 function initializeDatabase() {
   // Ensure the data directory exists (Railway clones fresh repo without it)
@@ -34,6 +66,9 @@ function initializeDatabase() {
       primary_constraint TEXT,
       superpower TEXT,
       deep_answers TEXT,
+
+      -- Public, unguessable id used in shareable result links (/r/:shareId)
+      share_id TEXT,
 
       -- Tags sent to Kit.com
       tags TEXT,
@@ -69,6 +104,11 @@ function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_reminders_remind_at ON reminders(remind_at);
     CREATE INDEX IF NOT EXISTS idx_reminders_sent ON reminders(sent);
   `);
+
+  const backfilled = migrateShareIds(db);
+  if (backfilled > 0) {
+    console.log(`[DB] Backfilled share links for ${backfilled} existing assessment(s).`);
+  }
 
   return db;
 }

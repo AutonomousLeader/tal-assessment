@@ -5,6 +5,7 @@
 // No-op if KIT_API_SECRET is not set.
 
 const { syncToKit } = require("./kit-integration");
+const { buildShareUrl } = require("./share-page");
 
 function parseJsonField(raw) {
   if (!raw || typeof raw !== "string") return null;
@@ -25,6 +26,7 @@ function assessmentRowToSyncData(row) {
     pLevels: parseJsonField(row.p_levels),
     primaryConstraint: row.primary_constraint,
     superpower: row.superpower,
+    shareUrl: row.share_id ? buildShareUrl(row.share_id) : null,
     tags: parseJsonField(row.tags) || [],
   };
 }

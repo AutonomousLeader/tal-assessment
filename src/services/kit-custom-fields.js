@@ -12,6 +12,7 @@ const REQUIRED_FIELDS = [
   { key: "tal_assessment_type", label: "TAL Assessment Type" },
   { key: "tal_constraint", label: "TAL Constraint" },
   { key: "tal_superpower", label: "TAL Superpower" },
+  { key: "tal_result_link", label: "TAL Result Link" },
   { key: "tal_pipeline_level", label: "TAL Pipeline Level" },
   { key: "tal_profit_level", label: "TAL Profit Level" },
   { key: "tal_perspective_level", label: "TAL Perspective Level" },

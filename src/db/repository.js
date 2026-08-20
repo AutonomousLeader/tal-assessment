@@ -7,12 +7,12 @@ function createRepository(db) {
       email, first_name, assessment_type, level_result, flagged,
       total_points, category_scores, individual_answers,
       p_levels, primary_constraint, superpower, deep_answers,
-      tags
+      share_id, tags
     ) VALUES (
       @email, @firstName, @assessmentType, @levelResult, @flagged,
       @totalPoints, @categoryScores, @individualAnswers,
       @pLevels, @primaryConstraint, @superpower, @deepAnswers,
-      @tags
+      @shareId, @tags
     )
   `);
 
@@ -22,6 +22,8 @@ function createRepository(db) {
   const incrementCounterStmt = db.prepare("UPDATE counter SET count = count + 1 WHERE id = 1");
   const markKitSyncedStmt = db.prepare("UPDATE assessments SET kit_synced = 1, kit_subscriber_id = ? WHERE id = ?");
   const getAssessmentByIdStmt = db.prepare("SELECT * FROM assessments WHERE id = ?");
+  const getAssessmentByShareIdStmt = db.prepare("SELECT * FROM assessments WHERE share_id = ?");
+  const shareIdExistsStmt = db.prepare("SELECT 1 FROM assessments WHERE share_id = ? LIMIT 1");
   const getUnsyncedStmt = db.prepare("SELECT * FROM assessments WHERE kit_synced = 0 ORDER BY created_at ASC LIMIT 100");
 
   function insertAssessment(data) {
@@ -38,6 +40,7 @@ function createRepository(db) {
       primaryConstraint: data.primaryConstraint ?? null,
       superpower: data.superpower ?? null,
       deepAnswers: data.deepAnswers ? JSON.stringify(data.deepAnswers) : null,
+      shareId: data.shareId ?? null,
       tags: data.tags ? JSON.stringify(data.tags) : null,
     };
 
@@ -67,8 +70,58 @@ function createRepository(db) {
     return getAssessmentByIdStmt.get(id) || null;
   }
 
+  function getAssessmentByShareId(shareId) {
+    return getAssessmentByShareIdStmt.get(shareId) || null;
+  }
+
+  function shareIdExists(shareId) {
+    return shareIdExistsStmt.get(shareId) !== undefined;
+  }
+
   function getUnsyncedAssessments() {
     return getUnsyncedStmt.all();
+  }
+
+  // ─── Admin console listing ────────────────────────────────────────────────
+
+  const LIST_COLUMNS = `
+    id, share_id, email, first_name, assessment_type, level_result,
+    primary_constraint, superpower, total_points, flagged, kit_synced, created_at
+  `;
+
+  const SEARCH_WHERE = "WHERE email LIKE @pattern ESCAPE '\\' OR first_name LIKE @pattern ESCAPE '\\'";
+
+  const listAllStmt = db.prepare(`
+    SELECT ${LIST_COLUMNS} FROM assessments
+    ORDER BY datetime(created_at) DESC, id DESC
+    LIMIT @limit OFFSET @offset
+  `);
+
+  const listSearchStmt = db.prepare(`
+    SELECT ${LIST_COLUMNS} FROM assessments
+    ${SEARCH_WHERE}
+    ORDER BY datetime(created_at) DESC, id DESC
+    LIMIT @limit OFFSET @offset
+  `);
+
+  const countAllStmt = db.prepare("SELECT COUNT(*) AS total FROM assessments");
+  const countSearchStmt = db.prepare(`SELECT COUNT(*) AS total FROM assessments ${SEARCH_WHERE}`);
+
+  // % and _ are wildcards in LIKE, so a search for "a_b" must not match "axb".
+  function toSearchPattern(search) {
+    const escaped = search.replace(/[\\%_]/g, match => "\\" + match);
+    return "%" + escaped + "%";
+  }
+
+  function listAssessments({ search, limit, offset }) {
+    const params = { limit, offset };
+    if (!search) return listAllStmt.all(params);
+    return listSearchStmt.all({ ...params, pattern: toSearchPattern(search) });
+  }
+
+  function countAssessments({ search }) {
+    if (!search) return countAllStmt.get().total;
+    return countSearchStmt.get({ pattern: toSearchPattern(search) }).total;
   }
 
   const insertReminderStmt = db.prepare(`
@@ -89,11 +142,15 @@ function createRepository(db) {
   return {
     insertAssessment,
     getAssessmentById,
+    getAssessmentByShareId,
+    shareIdExists,
     flagAssessment,
     getCounter,
     incrementCounter,
     markKitSynced,
     getUnsyncedAssessments,
+    listAssessments,
+    countAssessments,
     insertReminder,
   };
 }
