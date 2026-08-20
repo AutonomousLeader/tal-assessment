@@ -9,6 +9,7 @@ const KIT_API_URL = "https://api.kit.com/v4";
 const PAGE_SIZE = 500;
 const MAX_PAGES = 50; // 25k subscribers — a backstop, not an expected limit
 const OUTREACH_TAG = "tal-outreach-requested";
+const COMPLETED_TAG = "tal-assessment-completed";
 
 const P_FIELD_MAP = {
   Pipeline: "tal_pipeline_level",
@@ -118,13 +119,45 @@ function toImportedAssessment(subscriber, flaggedIds = new Set()) {
 
 // ─── Import ─────────────────────────────────────────────────────────────────
 
-async function fetchFlaggedSubscriberIds(apiSecret) {
-  const tags = await fetchAll(apiSecret, "/tags", "tags");
-  const outreachTag = tags.find(tag => tag.name === OUTREACH_TAG);
-  if (!outreachTag) return new Set();
+// A tag listing may return the subscriber inline or wrapped in a membership
+// record. Both shapes appear across Kit's endpoints.
+function unwrapSubscriber(entry) {
+  if (!entry) return null;
+  return entry.subscriber && typeof entry.subscriber === "object" ? entry.subscriber : entry;
+}
 
-  const subscribers = await fetchAll(apiSecret, `/tags/${outreachTag.id}/subscribers`, "subscribers");
-  return new Set(subscribers.map(entry => String(entry.id)));
+async function fetchTagSubscribers(apiSecret, tags, tagName) {
+  const tag = tags.find(candidate => candidate.name === tagName);
+  if (!tag) return null;
+  const entries = await fetchAll(apiSecret, `/tags/${tag.id}/subscribers`, "subscribers");
+  return entries.map(unwrapSubscriber).filter(Boolean);
+}
+
+// Custom fields are what the whole import rests on. When a listing omits them,
+// read the subscriber directly rather than importing an empty record.
+async function withFields(apiSecret, subscriber) {
+  if (subscriber && subscriber.fields && typeof subscriber.fields === "object") return subscriber;
+  if (!subscriber || !subscriber.id) return subscriber;
+
+  const body = await kitGet(apiSecret, `/subscribers/${subscriber.id}`);
+  return body.subscriber || subscriber;
+}
+
+async function fetchFlaggedSubscriberIds(apiSecret, tags) {
+  const flagged = await fetchTagSubscribers(apiSecret, tags, OUTREACH_TAG);
+  if (!flagged) return new Set();
+  return new Set(flagged.map(entry => String(entry.id)));
+}
+
+// Prefer the completed-assessment tag: it is exactly the people we want, and it
+// keeps any per-subscriber lookups down to that group. Falls back to scanning
+// every subscriber when the tag is missing.
+async function fetchCandidates(apiSecret, tags) {
+  const tagged = await fetchTagSubscribers(apiSecret, tags, COMPLETED_TAG);
+  if (tagged && tagged.length > 0) return { candidates: tagged, scannedAll: false };
+
+  const everyone = await fetchAll(apiSecret, "/subscribers", "subscribers");
+  return { candidates: everyone, scannedAll: true };
 }
 
 async function importFromKit(repo, createShareId, apiSecret = process.env.KIT_API_SECRET) {
@@ -132,12 +165,22 @@ async function importFromKit(repo, createShareId, apiSecret = process.env.KIT_AP
     return { ok: false, reason: "no_api_key", message: "KIT_API_SECRET is not set on this server." };
   }
 
-  const flaggedIds = await fetchFlaggedSubscriberIds(apiSecret);
-  const subscribers = await fetchAll(apiSecret, "/subscribers", "subscribers");
+  const tags = await fetchAll(apiSecret, "/tags", "tags");
+  const flaggedIds = await fetchFlaggedSubscriberIds(apiSecret, tags);
+  const { candidates, scannedAll } = await fetchCandidates(apiSecret, tags);
 
-  const summary = { ok: true, scanned: subscribers.length, imported: 0, skipped: 0, withLevels: 0, levelOnly: 0 };
+  const summary = {
+    ok: true,
+    scanned: candidates.length,
+    imported: 0,
+    skipped: 0,
+    withLevels: 0,
+    levelOnly: 0,
+    scannedAll,
+  };
 
-  for (const subscriber of subscribers) {
+  for (const candidate of candidates) {
+    const subscriber = await withFields(apiSecret, candidate);
     const record = toImportedAssessment(subscriber, flaggedIds);
     if (!record) continue;
 
@@ -164,6 +207,7 @@ async function importFromKit(repo, createShareId, apiSecret = process.env.KIT_AP
 
 module.exports = {
   importFromKit,
+  unwrapSubscriber,
   toImportedAssessment,
   readPLevels,
   toSqliteTimestamp,

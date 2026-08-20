@@ -100,14 +100,24 @@ test("timestamps convert to the format the database stores", () => {
 
 // ─── The import itself ──────────────────────────────────────────────────────
 
-function fakeKit({ subscribers, tags = [], taggedSubscribers = [] }) {
+function fakeKit({ subscribers, tags = [], byTag = {}, lookups = null }) {
   return async (input) => {
     const url = new URL(String(input));
     const json = body => ({ ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) });
     const page = { has_next_page: false, end_cursor: null };
 
     if (url.pathname.endsWith("/tags")) return json({ tags, pagination: page });
-    if (/\/tags\/\d+\/subscribers$/.test(url.pathname)) return json({ subscribers: taggedSubscribers, pagination: page });
+
+    const tagMatch = url.pathname.match(/\/tags\/(\d+)\/subscribers$/);
+    if (tagMatch) return json({ subscribers: byTag[tagMatch[1]] || [], pagination: page });
+
+    const oneMatch = url.pathname.match(/\/subscribers\/(\d+)$/);
+    if (oneMatch) {
+      if (lookups) lookups.push(oneMatch[1]);
+      const found = subscribers.find(s => String(s.id) === oneMatch[1]);
+      return json({ subscriber: found || null });
+    }
+
     if (url.pathname.endsWith("/subscribers")) return json({ subscribers, pagination: page });
 
     return { ok: false, status: 404, json: async () => ({}), text: async () => "not found" };
@@ -137,7 +147,7 @@ test("importing brings in every past taker and skips them next time", async (t) 
   globalThis.fetch = fakeKit({
     subscribers,
     tags: [{ id: 5, name: "tal-outreach-requested" }],
-    taggedSubscribers: [{ id: 77 }],
+    byTag: { 5: [{ id: 77 }] },
   });
 
   const repo = stubRepo();
@@ -175,4 +185,62 @@ test("a Kit outage surfaces as an error, not a partial import", async (t) => {
   globalThis.fetch = async () => ({ ok: false, status: 500, text: async () => "upstream boom", json: async () => ({}) });
 
   await assert.rejects(() => importFromKit(stubRepo(), () => "x", "fake-key"), /Kit request failed \(500\)/);
+});
+
+
+test("the completed-assessment tag is used instead of scanning every subscriber", async (t) => {
+  const realFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = realFetch; });
+
+  const taker = deepSubscriber();
+  globalThis.fetch = fakeKit({
+    subscribers: [taker, { id: 99, email_address: "newsletter@example.com", fields: {} }],
+    tags: [{ id: 3, name: "tal-assessment-completed" }, { id: 5, name: "tal-outreach-requested" }],
+    byTag: { 3: [taker], 5: [] },
+  });
+
+  const summary = await importFromKit(stubRepo(), () => "ShareIdOne12", "fake-key");
+  assert.strictEqual(summary.scannedAll, false, "should have used the tag, not a full scan");
+  assert.strictEqual(summary.scanned, 1);
+  assert.strictEqual(summary.imported, 1);
+});
+
+test("a tag listing that wraps the subscriber is unwrapped", async (t) => {
+  const realFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = realFetch; });
+
+  const taker = deepSubscriber();
+  globalThis.fetch = fakeKit({
+    subscribers: [taker],
+    tags: [{ id: 3, name: "tal-assessment-completed" }],
+    byTag: { 3: [{ id: 1, created_at: "2026-07-14T18:22:00.000Z", subscriber: taker }] },
+  });
+
+  const repo = stubRepo();
+  const summary = await importFromKit(repo, () => "ShareIdTwo12", "fake-key");
+  assert.strictEqual(summary.imported, 1);
+  assert.strictEqual(repo.rows[0].email, "dphipps@mcre.dev");
+});
+
+test("a listing without custom fields falls back to reading each subscriber", async (t) => {
+  const realFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = realFetch; });
+
+  const taker = deepSubscriber();
+  const withoutFields = { id: taker.id, email_address: taker.email_address, created_at: taker.created_at };
+  const lookups = [];
+
+  globalThis.fetch = fakeKit({
+    subscribers: [taker],
+    tags: [{ id: 3, name: "tal-assessment-completed" }],
+    byTag: { 3: [withoutFields] },
+    lookups,
+  });
+
+  const repo = stubRepo();
+  const summary = await importFromKit(repo, () => "ShareIdThree", "fake-key");
+  assert.deepStrictEqual(lookups, ["77"], "should have fetched the subscriber for its fields");
+  assert.strictEqual(summary.imported, 1);
+  assert.strictEqual(repo.rows[0].levelResult, 5);
+  assert.deepStrictEqual(Object.keys(repo.rows[0].pLevels).length, 9);
 });
