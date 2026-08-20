@@ -14,6 +14,8 @@ const {
 } = require("../services/admin-auth");
 const { createLoginThrottle } = require("../services/login-throttle");
 const { toAdminResult, toAdminListItem } = require("../services/admin-result");
+const { importFromKit } = require("../services/kit-import");
+const { createUniqueShareId } = require("../services/share-id");
 
 const DEFAULT_PAGE_SIZE = 25;
 const MAX_PAGE_SIZE = 100;
@@ -125,6 +127,28 @@ function createAdminRoutes(repo) {
     }
 
     res.json({ success: true, data: result });
+  });
+
+  // POST /api/admin/import-kit — rebuild records for people who completed an
+  // assessment before this database held them. Safe to run repeatedly: anyone
+  // already imported is skipped.
+  router.post("/import-kit", requireAdmin, async (req, res) => {
+    try {
+      const summary = await importFromKit(
+        repo,
+        () => createUniqueShareId(candidate => repo.shareIdExists(candidate)),
+      );
+
+      if (!summary.ok) {
+        return res.status(503).json({ success: false, errors: [summary.message] });
+      }
+
+      console.log(`[Kit Import] Scanned ${summary.scanned} subscribers, imported ${summary.imported}, skipped ${summary.skipped}.`);
+      return res.json({ success: true, data: summary });
+    } catch (err) {
+      console.error("[Kit Import] Failed:", err.message);
+      return res.status(502).json({ success: false, errors: ["Kit import failed: " + err.message] });
+    }
   });
 
   return router;

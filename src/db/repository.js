@@ -7,12 +7,13 @@ function createRepository(db) {
       email, first_name, assessment_type, level_result, flagged,
       total_points, category_scores, individual_answers,
       p_levels, primary_constraint, superpower, deep_answers,
-      share_id, tags
+      share_id, source, tags, kit_synced, kit_subscriber_id, created_at
     ) VALUES (
       @email, @firstName, @assessmentType, @levelResult, @flagged,
       @totalPoints, @categoryScores, @individualAnswers,
       @pLevels, @primaryConstraint, @superpower, @deepAnswers,
-      @shareId, @tags
+      @shareId, @source, @tags, @kitSynced, @kitSubscriberId,
+      COALESCE(@createdAt, datetime('now'))
     )
   `);
 
@@ -41,7 +42,12 @@ function createRepository(db) {
       superpower: data.superpower ?? null,
       deepAnswers: data.deepAnswers ? JSON.stringify(data.deepAnswers) : null,
       shareId: data.shareId ?? null,
+      source: data.source || "assessment",
       tags: data.tags ? JSON.stringify(data.tags) : null,
+      // Imported records are already in Kit, so they must not enter the retry loop.
+      kitSynced: data.kitSynced ? 1 : 0,
+      kitSubscriberId: data.kitSubscriberId ?? null,
+      createdAt: data.createdAt ?? null,
     };
 
     const result = insertAssessmentStmt.run(params);
@@ -74,6 +80,15 @@ function createRepository(db) {
     return getAssessmentByShareIdStmt.get(shareId) || null;
   }
 
+  const getByKitSubscriberStmt = db.prepare(
+    "SELECT * FROM assessments WHERE kit_subscriber_id = ? AND source = 'kit-import' LIMIT 1"
+  );
+
+  // Lets the Kit import run again without duplicating anyone.
+  function getImportedByKitSubscriberId(kitSubscriberId) {
+    return getByKitSubscriberStmt.get(String(kitSubscriberId)) || null;
+  }
+
   function shareIdExists(shareId) {
     return shareIdExistsStmt.get(shareId) !== undefined;
   }
@@ -86,7 +101,8 @@ function createRepository(db) {
 
   const LIST_COLUMNS = `
     id, share_id, email, first_name, assessment_type, level_result,
-    primary_constraint, superpower, total_points, flagged, kit_synced, created_at
+    primary_constraint, superpower, total_points, flagged, kit_synced,
+    source, individual_answers, deep_answers, p_levels, created_at
   `;
 
   const SEARCH_WHERE = "WHERE email LIKE @pattern ESCAPE '\\' OR first_name LIKE @pattern ESCAPE '\\'";
@@ -143,6 +159,7 @@ function createRepository(db) {
     insertAssessment,
     getAssessmentById,
     getAssessmentByShareId,
+    getImportedByKitSubscriberId,
     shareIdExists,
     flagAssessment,
     getCounter,

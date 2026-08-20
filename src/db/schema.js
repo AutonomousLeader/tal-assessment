@@ -17,6 +17,13 @@ function hasColumn(db, table, column) {
 // gives every historical row an id so old results become shareable too.
 // Safe to run on every boot: the column check and the backfill are both no-ops
 // once they have run.
+// Marks where a record came from. Rows that predate the column were all taken
+// on the site.
+function migrateSource(db) {
+  if (hasColumn(db, "assessments", "source")) return;
+  db.exec("ALTER TABLE assessments ADD COLUMN source TEXT NOT NULL DEFAULT 'assessment'");
+}
+
 function migrateShareIds(db) {
   if (!hasColumn(db, "assessments", "share_id")) {
     db.exec("ALTER TABLE assessments ADD COLUMN share_id TEXT");
@@ -70,6 +77,10 @@ function initializeDatabase() {
       -- Public, unguessable id used in shareable result links (/r/:shareId)
       share_id TEXT,
 
+      -- 'assessment' for someone who took it here, 'kit-import' for a record
+      -- rebuilt from Kit.com custom fields (no raw answers to replay)
+      source TEXT NOT NULL DEFAULT 'assessment',
+
       -- Tags sent to Kit.com
       tags TEXT,
 
@@ -104,6 +115,8 @@ function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_reminders_remind_at ON reminders(remind_at);
     CREATE INDEX IF NOT EXISTS idx_reminders_sent ON reminders(sent);
   `);
+
+  migrateSource(db);
 
   const backfilled = migrateShareIds(db);
   if (backfilled > 0) {

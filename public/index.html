@@ -1305,7 +1305,7 @@ function AdminLogin({ onSignedIn, notice }) {
 // ─── ADMIN: ASSESSMENT LIST ──────────────────────────────────────────────────
 const TYPE_LABELS = { quick: "Quick", deep: "In-Depth" };
 
-function AdminList({ items, total, offset, search, loading, error, onSearch, onPage, onOpen, onSignOut }) {
+function AdminList({ items, total, offset, search, loading, error, importing, importSummary, onImport, onSearch, onPage, onOpen, onSignOut }) {
   const firstShown = total === 0 ? 0 : offset + 1;
   const lastShown = Math.min(offset + ADMIN_PAGE_SIZE, total);
 
@@ -1320,10 +1320,24 @@ function AdminList({ items, total, offset, search, loading, error, onSearch, onP
             Completed Assessments
           </h1>
         </div>
-        <button className="btn-ghost" onClick={onSignOut} style={{ padding: "0.7rem 1.5rem", fontSize: "0.65rem" }}>
-          Sign Out
-        </button>
+        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+          <button className="btn-ghost" onClick={onImport} disabled={importing}
+            style={{ padding: "0.7rem 1.5rem", fontSize: "0.65rem", opacity: importing ? 0.5 : 1 }}>
+            {importing ? "Importing..." : "Import From Kit"}
+          </button>
+          <button className="btn-ghost" onClick={onSignOut} style={{ padding: "0.7rem 1.5rem", fontSize: "0.65rem" }}>
+            Sign Out
+          </button>
+        </div>
       </div>
+
+      {importSummary && (
+        <div style={{ background: "rgba(8,126,139,0.10)", border: "1px solid rgba(8,126,139,0.3)", borderRadius: "6px", padding: "1rem 1.25rem", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.9rem", color: BRAND.offWhite, lineHeight: 1.6, margin: 0 }}>
+            {importSummary}
+          </p>
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap", marginBottom: "1.25rem" }}>
         <input
@@ -1365,7 +1379,14 @@ function AdminList({ items, total, offset, search, loading, error, onSearch, onP
               <span style={{ color: BRAND.gray }}>{formatTakenAt(item.createdAt)}</span>
               <span style={{ color: BRAND.offWhite, fontWeight: 500 }}>{item.firstName || "\u2014"}</span>
               <span style={{ color: BRAND.gray, overflow: "hidden", textOverflow: "ellipsis" }}>{item.email}</span>
-              <span style={{ color: BRAND.gray }}>{TYPE_LABELS[item.assessmentType] || item.assessmentType}</span>
+              <span style={{ color: BRAND.gray }}>
+                {TYPE_LABELS[item.assessmentType] || item.assessmentType}
+                {item.source === "kit-import" && (
+                  <span style={{ fontSize: "0.6rem", color: BRAND.paleTeal, marginLeft: "0.4rem", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                    imported
+                  </span>
+                )}
+              </span>
               <span style={{ color: BRAND.paleTeal, fontWeight: 600 }}>L{item.levelResult}</span>
               <span style={{ color: item.primaryConstraint ? BRAND.coral : BRAND.gray }}>{item.primaryConstraint || "\u2014"}</span>
               <span style={{ color: item.flagged ? BRAND.teal : "rgba(138,155,176,0.3)", fontWeight: 700 }}>{item.flagged ? "Yes" : "\u2014"}</span>
@@ -1418,6 +1439,7 @@ function AdminRecordBar({ record, onBack }) {
         <p style={{ fontSize: "0.8rem", color: BRAND.gray, lineHeight: 1.5, margin: 0 }}>
           {TYPE_LABELS[record.assessmentType] || record.assessmentType} assessment, taken {formatTakenAtLong(record.createdAt)}
           {record.flagged ? " \u00b7 asked to be contacted" : ""}
+          {record.source === "kit-import" ? " \u00b7 rebuilt from Kit" : ""}
         </p>
       </div>
       <button className="btn-ghost" onClick={onBack} style={{ padding: "0.8rem 1.5rem", fontSize: "0.65rem", whiteSpace: "nowrap" }}>
@@ -1452,6 +1474,8 @@ function SelfAssessment() {
   const [shareId, setShareId] = useState(null);
   const [sharedView, setSharedView] = useState(false);
   const [shareLoadError, setShareLoadError] = useState(null);
+  const [recordDetail, setRecordDetail] = useState("full");
+  const [recordLevel, setRecordLevel] = useState(null);
 
   // Admin console state. `adminView` means the operator is looking at someone
   // else's result, so none of the taker's own actions belong on screen.
@@ -1464,6 +1488,8 @@ function SelfAssessment() {
   const [adminSearch, setAdminSearch] = useState("");
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminError, setAdminError] = useState(null);
+  const [adminImporting, setAdminImporting] = useState(false);
+  const [adminImportSummary, setAdminImportSummary] = useState(null);
   const adminSearchTimer = useRef(null);
 
   // Fetch counter on mount
@@ -1480,8 +1506,10 @@ function SelfAssessment() {
   // console and the original page always show the same diagnosis.
   const showStoredResult = (data) => {
     setAssessmentType(data.assessmentType);
+    setRecordDetail(data.detail || "full");
+    setRecordLevel(data.levelResult);
 
-    if (data.assessmentType === "deep") {
+    if (data.assessmentType === "deep" && data.deepAnswers) {
       const rebuilt = calculateDeepResult(data.deepAnswers);
       setDeepAnswers(data.deepAnswers);
       setDeepResult(rebuilt);
@@ -1490,9 +1518,32 @@ function SelfAssessment() {
       return;
     }
 
-    setAnswers(data.individualAnswers);
-    setResult(calculateResult(data.individualAnswers));
-    setScreen("result");
+    // Imported records kept their nine P levels but not the answers behind
+    // them, which is everything the profile actually draws.
+    if (data.assessmentType === "deep" && data.pLevels) {
+      const sorted = Object.entries(data.pLevels).sort((a, b) => a[1] - b[1]);
+      const rebuilt = {
+        pLevels: data.pLevels,
+        overallLevel: data.levelResult,
+        primaryConstraint: data.primaryConstraint || sorted[0][0],
+        superpower: data.superpower || sorted[sorted.length - 1][0],
+      };
+      setDeepAnswers([]);
+      setDeepResult(rebuilt);
+      setExpandedP(rebuilt.primaryConstraint);
+      setScreen("deep-result");
+      return;
+    }
+
+    if (data.assessmentType === "quick" && data.individualAnswers) {
+      setAnswers(data.individualAnswers);
+      setResult(calculateResult(data.individualAnswers));
+      setScreen("result");
+      return;
+    }
+
+    // Only the overall level survived.
+    setScreen("level-result");
   };
 
   const hydrateSharedResult = (data) => {
@@ -1632,6 +1683,40 @@ function SelfAssessment() {
     }, 300);
   };
 
+  // Pulls anyone who completed an assessment before this database held them.
+  const handleAdminImport = () => {
+    setAdminImporting(true);
+    setAdminImportSummary(null);
+    setAdminError(null);
+
+    fetch(API_BASE + "/api/admin/import-kit", { method: "POST" })
+      .then(res => res.json().then(body => ({ status: res.status, body })))
+      .then(({ status, body }) => {
+        setAdminImporting(false);
+        if (status === 401) {
+          setAdminAuthed(false);
+          setScreen("admin-login");
+          return;
+        }
+        if (!body.success) {
+          setAdminError((body.errors && body.errors[0]) || "Import failed.");
+          return;
+        }
+
+        const { imported, skipped, withLevels, levelOnly } = body.data;
+        setAdminImportSummary(
+          imported === 0
+            ? `Nothing new to import. ${skipped} record${skipped === 1 ? "" : "s"} were already here.`
+            : `Imported ${imported} record${imported === 1 ? "" : "s"} (${withLevels} with the full 9P profile, ${levelOnly} with the level only). Skipped ${skipped} already here.`
+        );
+        loadAdminList({ offset: 0, search: adminSearch.trim() });
+      })
+      .catch(() => {
+        setAdminImporting(false);
+        setAdminError("Could not reach the server. Try again.");
+      });
+  };
+
   const handleAdminPage = (offset) => {
     loadAdminList({ offset, search: adminSearch.trim() });
   };
@@ -1686,6 +1771,8 @@ function SelfAssessment() {
       setEmail("");
       setFlagged(false);
       setExpandedP(null);
+      setRecordDetail("full");
+      setRecordLevel(null);
       setScreen("admin-list");
       setIsFading(false);
     }, 250);
@@ -1841,6 +1928,8 @@ function SelfAssessment() {
       setShareId(null);
       setSharedView(false);
       setShareLoadError(null);
+      setRecordDetail("full");
+      setRecordLevel(null);
       setIsFading(false);
     }, 350);
   };
@@ -2093,6 +2182,9 @@ function SelfAssessment() {
             search={adminSearch}
             loading={adminLoading}
             error={adminError}
+            importing={adminImporting}
+            importSummary={adminImportSummary}
+            onImport={handleAdminImport}
             onSearch={handleAdminSearch}
             onPage={handleAdminPage}
             onOpen={openAdminRecord}
@@ -2449,6 +2541,60 @@ function SelfAssessment() {
                 animation: "analyzeBar 2.5s ease-out forwards",
               }} />
             </div>
+          </div>
+        )}
+
+        {/* ── LEVEL-ONLY RECORD ── */}
+        {screen === "level-result" && recordLevel && results[recordLevel] && (
+          <div className={"fade-wrap" + (isFading ? " out" : "")} style={{ maxWidth: 700, width: "100%", textAlign: "left" }}>
+
+            {adminView && adminRecord
+              ? <AdminRecordBar record={adminRecord} onBack={backToAdminList} />
+              : sharedView && <SharedViewBanner firstName={firstName} />}
+
+            <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", letterSpacing: "0.25em", fontWeight: 700, color: BRAND.teal, textTransform: "uppercase", marginBottom: "1.25rem" }}>
+                Assessment Record
+              </div>
+              <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(2.2rem, 4.5vw, 3.5rem)", fontWeight: 800, lineHeight: 1.1, marginBottom: "1.5rem" }}>
+                {results[recordLevel].label}
+              </h1>
+              <div style={{ fontSize: "1.05rem", color: BRAND.lightGray, lineHeight: 1.85, maxWidth: 600, margin: "0 auto 1rem", whiteSpace: "pre-wrap" }}>
+                {results[recordLevel].body}
+              </div>
+              <p style={{ fontSize: "0.85rem", color: BRAND.gray, lineHeight: 1.6, maxWidth: 500, margin: "0 auto" }}>
+                Results for <span style={{ color: BRAND.offWhite }}>{resultOwner}</span>
+              </p>
+            </div>
+
+            <div style={{ background: BRAND.dark2, border: "1px solid rgba(138,155,176,0.15)", borderRadius: "6px", padding: "1.25rem 1.5rem", marginBottom: "2.5rem" }}>
+              <p style={{ fontSize: "0.85rem", color: BRAND.gray, lineHeight: 1.7, margin: 0 }}>
+                This record was rebuilt from the email platform, which kept the overall level but not the answers behind it. A fresh assessment gives the full breakdown across all 9 P's.
+              </p>
+            </div>
+
+            {shareUrl && (
+              <ShareBlock
+                id="l-share"
+                shareUrl={shareUrl}
+                shareMessage={"My result from The Autonomous Leader assessment: " + results[recordLevel].label + "."}
+                variant={adminView ? "admin" : sharedView ? "shared" : "owner"}
+              />
+            )}
+
+            <div style={{ background: "#1f2e33", padding: "2.5rem", border: "1px solid #1a4a50", borderRadius: "4px", marginBottom: "2rem" }}>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.7rem", color: BRAND.paleTeal, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
+                The Next Move
+              </div>
+              <p style={{ fontSize: "1rem", color: "#F5F5F5", lineHeight: 1.6, marginBottom: "2rem" }}>
+                {results[recordLevel].next}
+              </p>
+              <a href={SKOOL_URL} target="_blank" rel="noopener noreferrer" className="btn-gold" style={{ width: "100%", textAlign: "center" }}>
+                {results[recordLevel].cta}
+              </a>
+            </div>
+
+            {sharedView && <TakeYourOwnCta firstName={firstName} />}
           </div>
         )}
 

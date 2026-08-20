@@ -22,8 +22,11 @@ function toAdminResult(row) {
 }
 
 function toAdminListItem(row) {
+  const hasAnswers = Boolean(row.individual_answers || row.deep_answers);
   return {
     id: row.id,
+    source: row.source || "assessment",
+    detail: hasAnswers ? "full" : row.p_levels ? "levels" : "level-only",
     shareId: row.share_id,
     email: row.email,
     firstName: row.first_name || null,

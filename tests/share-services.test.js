@@ -101,14 +101,52 @@ test("a shared result never exposes email, tags, flag state or Kit ids", () => {
   });
 });
 
-test("returns null for rows that cannot render a result", () => {
+test("returns null only when there is no viewable result at all", () => {
   assert.strictEqual(toPublicResult(null), null);
   assert.strictEqual(toPublicResult({ ...quickRow, share_id: null }), null);
-  assert.strictEqual(toPublicResult({ ...quickRow, individual_answers: null }), null);
-  assert.strictEqual(toPublicResult({ ...quickRow, individual_answers: "not json" }), null);
-  assert.strictEqual(toPublicResult({ ...quickRow, individual_answers: JSON.stringify(["yes"]) }), null);
-  assert.strictEqual(toPublicResult({ ...deepRow, deep_answers: JSON.stringify(Array(4).fill("3")) }), null);
   assert.strictEqual(toPublicResult({ ...quickRow, assessment_type: "other" }), null);
+  assert.strictEqual(toPublicResult({ ...quickRow, level_result: null }), null);
+  assert.strictEqual(toPublicResult({ ...quickRow, level_result: 9 }), null);
+});
+
+test("a row whose answers are gone still shows the level it reached", () => {
+  ["full", "levels", "level-only"].forEach(detail => assert.ok(detail));
+
+  const withoutAnswers = toPublicResult({ ...quickRow, individual_answers: null });
+  assert.strictEqual(withoutAnswers.detail, "level-only");
+  assert.strictEqual(withoutAnswers.levelLabel, "Level 4 — The Systems Builder");
+
+  const corrupt = toPublicResult({ ...quickRow, individual_answers: "not json" });
+  assert.strictEqual(corrupt.detail, "level-only");
+
+  const truncated = toPublicResult({ ...quickRow, individual_answers: JSON.stringify(["yes"]) });
+  assert.strictEqual(truncated.detail, "level-only");
+});
+
+test("an imported deep record redraws the profile from its nine P levels", () => {
+  const pLevels = { Pipeline: 6, Profit: 2, Perspective: 4, Principles: 5, Program: 3, People: 6, Process: 2, Progress: 5, Power: 4 };
+  const imported = toPublicResult({
+    ...deepRow, deep_answers: null, source: "kit-import", p_levels: JSON.stringify(pLevels),
+    primary_constraint: "Profit", superpower: "People",
+  });
+
+  assert.strictEqual(imported.detail, "levels");
+  assert.deepStrictEqual(imported.pLevels, pLevels);
+  assert.strictEqual(imported.primaryConstraint, "Profit");
+  assert.strictEqual(imported.source, "kit-import");
+
+  // A partial or malformed profile falls back rather than drawing a wrong wheel.
+  const partial = toPublicResult({ ...deepRow, deep_answers: null, p_levels: JSON.stringify({ Pipeline: 6 }) });
+  assert.strictEqual(partial.detail, "level-only");
+
+  const outOfRange = toPublicResult({ ...deepRow, deep_answers: null, p_levels: JSON.stringify({ ...pLevels, Power: 99 }) });
+  assert.strictEqual(outOfRange.detail, "level-only");
+});
+
+test("a constraint that is not one of the nine P's is dropped, not displayed", () => {
+  const result = toPublicResult({ ...deepRow, primary_constraint: "Nonsense", superpower: "people" });
+  assert.strictEqual(result.primaryConstraint, null);
+  assert.strictEqual(result.superpower, null, "lowercase names must not slip through as P keys");
 });
 
 // ─── share-page ─────────────────────────────────────────────────────────────
