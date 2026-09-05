@@ -1,0 +1,55 @@
+<table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#1C1C1C" style="background-color:#1C1C1C;">
+  <tr>
+    <td align="center" style="padding:0;">
+      <table cellpadding="0" cellspacing="0" border="0" width="640" style="max-width:640px;width:100%;">
+
+        <!-- HEADER / LOGO -->
+        <tr><td align="center" style="padding:40px 30px 20px 30px;"><img src="https://embed.filekitcdn.com/e/emZMu9JAwpKZ72oCFrzRWb/b96qj83bKdy1VcnMHmtHPt?w=400&fit=clip" alt="The Autonomous Leader" width="400" style="display:block;max-width:400px;width:100%;height:auto;" /></td></tr>
+
+        <!-- GREETING -->
+        <tr><td style="padding:0 30px 20px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">{{ subscriber.first_name }},</td></tr>
+
+        <!-- BODY -->
+        <tr><td style="padding:0 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">It has been a month since you took the assessment.</td></tr>
+        <tr><td style="padding:0 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">You know your level &mdash; {{ subscriber.tal_level | default: "your current" }}. You know your constraint &mdash; {{ subscriber.tal_constraint | default: "your primary constraint" }}. You know your superpower &mdash; {{ subscriber.tal_superpower | default: "your strongest area" }}. The diagnostic is clear.</td></tr>
+        <tr><td style="padding:0 30px 30px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">Knowing where you are is the first step. Building the path forward is the second.</td></tr>
+
+        <!-- CONDITIONAL STAGE CONTENT -->
+        <tr><td style="padding:0 30px 30px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">
+
+{% if subscriber.tal_level == "1" or subscriber.tal_level == "2" %}
+At your stage, the moves that matter are specific and concrete. The first system that works without you. The first handoff that does not come back wrong. The first week where revenue is not tied directly to your hours.
+{% endif %}
+
+{% if subscriber.tal_level == "3" or subscriber.tal_level == "4" %}
+At your stage, the work is structural. Decision authority that does not require your presence. Visibility into business health before problems become urgent. The operating rhythm that makes everything else sustainable.
+{% endif %}
+
+{% if subscriber.tal_level == "5" or subscriber.tal_level == "6" or subscriber.tal_level == "7" %}
+At your stage, the shift is leadership &mdash; not operations. Developing the people who run the business, not running it yourself. Building something with real transferable value that does not depend on your daily involvement.
+{% endif %}
+
+        </td></tr>
+
+        <!-- DIVIDER -->
+        <tr><td style="padding:0 30px;"><table cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="border-top:1px solid #2a2a2a;font-size:1px;line-height:1px;">&nbsp;</td></tr></table></td></tr>
+
+        <!-- FREE RESOURCES -->
+        <tr><td style="padding:30px 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">Here is what I have built &mdash; and it is free.</td></tr>
+        <tr><td style="padding:0 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">The 7 Levels Course</strong> &mdash; a video course that walks you through what life looks like at your level, the traps that keep you there, and the specific shift required to reach the next one. If you want to understand where you are and who you need to become &mdash; this is the course.</td></tr>
+        <tr><td style="padding:0 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">The 9P Course</strong> &mdash; a video course that goes deep on your primary constraint. The fix sequence. The one move at every level. The playbook. If you want to fix the specific thing holding you back &mdash; this is the course.</td></tr>
+        <tr><td style="padding:0 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">9 downloadable playbooks</strong> &mdash; one for every P. Sixteen pages each. The constraint, the fix, the tools. Yours is waiting inside.</td></tr>
+        <tr><td style="padding:0 30px 20px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">The community</strong> &mdash; a group of owners at every level, working through the same framework. Every member has taken the assessment. Every conversation starts from a shared language. No fluff. No pitch. Just operators building alongside each other.</td></tr>
+        <tr><td style="padding:0 30px 20px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">All of it is inside The Autonomous Leader community. Free to join.</td></tr>
+        <tr><td align="center" style="padding:0 30px 30px 30px;"><table cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#F77316" style="background-color:#F77316;border-radius:4px;"><a href="https://www.skool.com/the-autonomous-leader-8930/about" style="display:inline-block;padding:14px 36px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#FFFFFF;text-decoration:none;">Join the Community &mdash; Courses, Playbooks, and Owners at Every Level</a></td></tr></table></td></tr>
+
+        <!-- CLOSING -->
+        <tr><td style="padding:0 30px 30px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">The ceiling is not effort. It never was.</td></tr>
+
+        <!-- FOOTER -->
+        <tr><td style="padding:0 30px 40px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#8A9BB0;">&mdash; Jonathan</td></tr>
+
+      </table>
+    </td>
+  </tr>
+</table>

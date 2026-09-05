@@ -1,0 +1,78 @@
+<table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#1C1C1C" style="background-color:#1C1C1C;">
+  <tr>
+    <td align="center" style="padding:0;">
+      <table cellpadding="0" cellspacing="0" border="0" width="640" style="max-width:640px;width:100%;">
+
+        <!-- HEADER / LOGO -->
+        <tr><td align="center" style="padding:40px 30px 20px 30px;"><img src="https://embed.filekitcdn.com/e/emZMu9JAwpKZ72oCFrzRWb/b96qj83bKdy1VcnMHmtHPt?w=400&fit=clip" alt="The Autonomous Leader" width="400" style="display:block;max-width:400px;width:100%;height:auto;" /></td></tr>
+
+        <!-- GREETING -->
+        <tr><td style="padding:0 30px 20px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">{{ subscriber.first_name }},</td></tr>
+
+        <!-- OPENING -->
+        <tr><td style="padding:0 30px 30px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">You took the Quick Assessment. Here is what it told me.</td></tr>
+
+        <!-- DIVIDER -->
+        <tr><td style="padding:0 30px;"><table cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="border-top:1px solid #2a2a2a;font-size:1px;line-height:1px;">&nbsp;</td></tr></table></td></tr>
+
+        <!-- YOUR OVERALL LEVEL -->
+        <tr><td style="padding:30px 30px 10px 30px;font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:bold;color:#087E8B;">Your Overall Level</td></tr>
+        <tr><td style="padding:0 30px 20px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">
+
+{% if subscriber.tal_level == "1" %}<strong style="color:#ffffff;">Level 1 &mdash; The Grinder</strong><br><br>Revenue is tied to your hours. You built something real &mdash; but you ARE the business. When you stop working, money stops coming in. The ceiling is not your effort. The ceiling is that the business cannot produce without you personally producing.<br><br>The shift: from &ldquo;I do the work&rdquo; to &ldquo;I build the system that does the work.&rdquo;{% endif %}{% if subscriber.tal_level == "2" %}<strong style="color:#ffffff;">Level 2 &mdash; The Builder</strong><br><br>You have people, but delegation comes back wrong. The standard only exists in your head &mdash; so the team guesses, and you fix their work. You are the training program, the quality check, and the final answer on everything.<br><br>The shift: from &ldquo;I manage the team&rdquo; to &ldquo;I build the systems the team runs on.&rdquo;{% endif %}{% if subscriber.tal_level == "3" %}<strong style="color:#ffffff;">Level 3 &mdash; The Multiplier</strong><br><br>Your team is capable, but every decision still flows through you. Your calendar is full of other people&rsquo;s responsibilities. You feel needed &mdash; but that feeling is the trap. Your team has stopped developing judgment because yours is always available.<br><br>The shift: from &ldquo;I approve the decisions&rdquo; to &ldquo;I build decision-makers.&rdquo;{% endif %}{% if subscriber.tal_level == "4" %}<strong style="color:#ffffff;">Level 4 &mdash; The Systems Builder</strong><br><br>Systems are working but there is no clear picture of business health. Results feel inconsistent &mdash; good months feel lucky, bad months feel like surprises. You find out about problems after they have become crises.<br><br>The shift: from &ldquo;I find out when things go wrong&rdquo; to &ldquo;I see what is happening before problems form.&rdquo;{% endif %}{% if subscriber.tal_level == "5" %}<strong style="color:#ffffff;">Level 5 &mdash; The Coach</strong><br><br>The system runs. The energy still comes from you. Performance is strong when you are engaged and dips when you pull back. The team is competent but not self-improving. This is the hardest transition in the framework &mdash; not tactical, but identity-level.<br><br>The shift: from &ldquo;I hold the standard&rdquo; to &ldquo;the team owns the standard.&rdquo;{% endif %}{% if subscriber.tal_level == "6" %}<strong style="color:#ffffff;">Level 6 &mdash; The Strategist</strong><br><br>Strong team, functioning OS, capable leaders &mdash; and you are still in the business more than the business needs. You are present by habit, not by necessity. Your best thinking gets crowded out by daily operations.<br><br>The shift: from &ldquo;responsible for day to day&rdquo; to &ldquo;responsible for where the business is going.&rdquo;{% endif %}{% if subscriber.tal_level == "7" %}<strong style="color:#ffffff;">Level 7 &mdash; The Autonomous Leader</strong><br><br>The destination. Your business runs without you. Team is self-managing, culture is self-sustaining, revenue does not depend on your personal production. This is not a development plan. It is a recognition of what you have built.{% endif %}
+
+        </td></tr>
+
+        <!-- DIVIDER -->
+        <tr><td style="padding:0 30px;"><table cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="border-top:1px solid #2a2a2a;font-size:1px;line-height:1px;">&nbsp;</td></tr></table></td></tr>
+
+        <!-- WHAT THE QUICK ASSESSMENT MEASURES -->
+        <tr><td style="padding:30px 30px 10px 30px;font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:bold;color:#087E8B;">What the Quick Assessment Measures</td></tr>
+        <tr><td style="padding:0 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">The Quick Assessment scored your business across five categories:</td></tr>
+        <tr><td style="padding:0 30px 10px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">1. Foundation &amp; Clarity</strong> &mdash; Do you have a documented plan, clear revenue targets, and a defined pipeline for creating business on purpose?</td></tr>
+        <tr><td style="padding:0 30px 10px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">2. Systems &amp; Execution</strong> &mdash; Are your core processes documented? Is delivery consistent regardless of who handles it? Does automation handle the repeatable work?</td></tr>
+        <tr><td style="padding:0 30px 10px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">3. Team &amp; Autonomy</strong> &mdash; Can your team operate without you for a week? Do they make decisions independently? Do they improve processes without being asked?</td></tr>
+        <tr><td style="padding:0 30px 10px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">4. Leadership &amp; Authority</strong> &mdash; Are you coaching, not just managing? Is decision authority distributed clearly? Does the team hold itself to the standard?</td></tr>
+        <tr><td style="padding:0 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">5. The Strategist</strong> &mdash; Are you working on the business, not in it? Is your calendar structured for strategic work? Does the business improve when you step back?</td></tr>
+        <tr><td style="padding:0 30px 30px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">These five categories map to the 9 P&rsquo;s &mdash; Pipeline, Profit, Perspective, Principles, Program, People, Process, Progress, and Power &mdash; which is where the In-Depth Assessment goes deeper.</td></tr>
+
+        <!-- DIVIDER -->
+        <tr><td style="padding:0 30px;"><table cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="border-top:1px solid #2a2a2a;font-size:1px;line-height:1px;">&nbsp;</td></tr></table></td></tr>
+
+        <!-- QUICK VS FULL -->
+        <tr><td style="padding:30px 30px 10px 30px;font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:bold;color:#087E8B;">The Quick Snapshot vs. the Full Picture</td></tr>
+        <tr><td style="padding:0 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">The Quick Assessment shows your overall level. It tells you where you are on the map.</td></tr>
+        <tr><td style="padding:0 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">What it does not show is which specific P is your primary constraint &mdash; the one area that, if fixed, creates movement in everything else. It does not show which P is your superpower. It does not give you per-P levels, per-P bottlenecks, or per-P next moves.</td></tr>
+        <tr><td style="padding:0 30px 20px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">The In-Depth Assessment breaks your business into all 9 P&rsquo;s &mdash; each with its own level, its own bottleneck, and its own specific next step. It takes about 8 minutes. And it gives you the complete diagnostic &mdash; not just the coordinate, but the entire map.</td></tr>
+        <tr><td align="center" style="padding:0 30px 30px 30px;"><table cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#087E8B" style="background-color:#087E8B;border-radius:4px;"><a href="https://assessment.theautonomousleader.com" style="display:inline-block;padding:14px 36px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#FFFFFF;text-decoration:none;">Take the In-Depth Assessment</a></td></tr></table></td></tr>
+
+        <!-- DIVIDER -->
+        <tr><td style="padding:0 30px;"><table cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="border-top:1px solid #2a2a2a;font-size:1px;line-height:1px;">&nbsp;</td></tr></table></td></tr>
+
+        <!-- WHAT THIS FRAMEWORK IS -->
+        <tr><td style="padding:30px 30px 10px 30px;font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:bold;color:#087E8B;">What This Framework Is</td></tr>
+        <tr><td style="padding:0 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">The Autonomous Leader is a 7-level framework for service business owners who have already built something real &mdash; and now need to build the version that does not need them to run it.</td></tr>
+        <tr><td style="padding:0 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">Seven levels. Nine diagnostic pillars. A specific answer to the question most owners cannot answer clearly: what actually needs to change next?</td></tr>
+        <tr><td style="padding:0 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">You already proved you can build a business. The question is whether the one you built can run without you.</td></tr>
+        <tr><td style="padding:0 30px 20px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">The In-Depth Assessment will tell you exactly where the gaps are.</td></tr>
+        <tr><td align="center" style="padding:0 30px 16px 30px;"><table cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#087E8B" style="background-color:#087E8B;border-radius:4px;"><a href="https://assessment.theautonomousleader.com" style="display:inline-block;padding:14px 36px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#FFFFFF;text-decoration:none;">Take the In-Depth Assessment</a></td></tr></table></td></tr>
+        <tr><td align="center" style="padding:0 30px 30px 30px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#8A9BB0;">If you want to retake the Quick Assessment:<br><a href="https://assessment.theautonomousleader.com" style="color:#8A9BB0;text-decoration:underline;">Retake the assessment</a></td></tr>
+
+        <!-- DIVIDER -->
+        <tr><td style="padding:0 30px;"><table cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="border-top:1px solid #2a2a2a;font-size:1px;line-height:1px;">&nbsp;</td></tr></table></td></tr>
+
+        <!-- WANT TO GO DEEPER — COMMUNITY -->
+        <tr><td style="padding:30px 30px 10px 30px;font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:bold;color:#087E8B;">Want to Go Deeper?</td></tr>
+        <tr><td style="padding:0 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">I built two free courses inside The Autonomous Leader community:</td></tr>
+        <tr><td style="padding:0 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">The 7 Levels Course</strong> &mdash; walks you through what life looks like at Level {{ subscriber.tal_level }}, the traps that keep you there, and what has to change to reach the next one.</td></tr>
+        <tr><td style="padding:0 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">The 9P Course</strong> &mdash; goes deep on each of the 9 dimensions. The constraint, the fix, the tools.</td></tr>
+        <tr><td style="padding:0 30px 20px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">Both are free. Both are inside the community &mdash; alongside owners at every level working through this framework together.</td></tr>
+        <tr><td align="center" style="padding:0 30px 30px 30px;"><table cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#F77316" style="background-color:#F77316;border-radius:4px;"><a href="https://www.skool.com/the-autonomous-leader-8930/about" style="display:inline-block;padding:14px 36px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#FFFFFF;text-decoration:none;">Join the Community &mdash; Courses &amp; Playbooks Inside</a></td></tr></table></td></tr>
+
+        <!-- FOOTER -->
+        <tr><td style="padding:0 30px 40px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#8A9BB0;">&mdash; Jonathan Lauer<br>The Autonomous Leader</td></tr>
+
+      </table>
+    </td>
+  </tr>
+</table>

@@ -4,6 +4,7 @@ const { syncToKit } = require("../services/kit-integration");
 const { createUniqueShareId, isValidShareId } = require("../services/share-id");
 const { toPublicResult } = require("../services/public-result");
 const { buildShareUrl } = require("../services/share-page");
+const { enqueueSubmissionEmails, enqueueOutreachEmail } = require("../services/email/send-pipeline");
 
 const router = express.Router();
 
@@ -93,7 +94,10 @@ function validateDeep(body) {
 
 // ─── Routes ─────────────────────────────────────────────────────────────────
 
-function createRoutes(repo) {
+// emailScheduler: { trigger() } — lets a route kick an immediate scheduler pass
+// after enqueuing, so the results email goes out in seconds. Optional; defaults
+// to a no-op so the routes work without the email system wired up.
+function createRoutes(repo, emailScheduler = { trigger: () => {} }) {
   // GET /api/counter
   router.get("/counter", (req, res) => {
     const count = repo.getCounter();
@@ -156,7 +160,30 @@ function createRoutes(repo) {
     // Increment the counter
     const newCount = repo.incrementCounter();
 
+    // ── Email funnel (Resend) ──
+    // Enqueue the results email (immediate) + the delayed nurture/upsell/retake
+    // jobs, then kick an immediate scheduler pass so the results email goes out
+    // now. No-op until RESEND_API_KEY is set, so this is safe to run in parallel
+    // with Kit during the cutover.
+    try {
+      enqueueSubmissionEmails(repo, {
+        email: body.email,
+        firstName: body.firstName,
+        assessmentType: body.assessmentType,
+        levelResult: body.levelResult,
+        pLevels: body.pLevels,
+        primaryConstraint: body.primaryConstraint,
+        superpower: body.superpower,
+        shareUrl,
+        assessmentId,
+      });
+      emailScheduler.trigger();
+    } catch (err) {
+      console.error("[Email] Enqueue on submit failed:", err.message);
+    }
+
     // Sync to Kit.com — creates subscriber, populates custom fields, applies tags
+    // (Kept running in parallel until the Resend cutover is confirmed.)
     const kitResult = await syncToKit({
       email: body.email,
       firstName: body.firstName,
@@ -207,6 +234,26 @@ function createRoutes(repo) {
         superpower: row.superpower,
       });
 
+      const pLevels = row.p_levels ? JSON.parse(row.p_levels) : null;
+      const shareUrl = row.share_id ? buildShareUrl(row.share_id) : null;
+
+      // Email funnel: enqueue the outreach follow-up (+1h), then kick a pass.
+      try {
+        enqueueOutreachEmail(repo, {
+          email: row.email,
+          firstName: row.first_name,
+          assessmentId: id,
+          levelResult: row.level_result,
+          primaryConstraint: row.primary_constraint,
+          superpower: row.superpower,
+          pLevels,
+          shareUrl,
+        });
+        emailScheduler.trigger();
+      } catch (err) {
+        console.error("[Email] Enqueue on flag failed:", err.message);
+      }
+
       // Fire-and-forget — don't block the response on Kit sync
       syncToKit({
         email: row.email,
@@ -215,10 +262,10 @@ function createRoutes(repo) {
         assessmentId: id,
         levelResult: row.level_result,
         assessmentType: row.assessment_type,
-        pLevels: row.p_levels ? JSON.parse(row.p_levels) : null,
+        pLevels,
         primaryConstraint: row.primary_constraint,
         superpower: row.superpower,
-        shareUrl: row.share_id ? buildShareUrl(row.share_id) : null,
+        shareUrl,
       }).catch(err => console.error("[Kit.com] Flag re-sync error:", err.message));
     }
 

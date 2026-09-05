@@ -114,6 +114,30 @@ function initializeDatabase() {
 
     CREATE INDEX IF NOT EXISTS idx_reminders_remind_at ON reminders(remind_at);
     CREATE INDEX IF NOT EXISTS idx_reminders_sent ON reminders(sent);
+
+    -- Scheduled funnel emails (replaces Kit's automation delays). Each row is
+    -- one email to send at send_at. The scheduler (services/email/scheduler.js)
+    -- sends due rows and marks them. status: pending | sent | skipped | failed.
+    CREATE TABLE IF NOT EXISTS email_jobs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL,
+      first_name TEXT,
+      template_key TEXT NOT NULL,
+      assessment_id INTEGER,
+      context TEXT,                       -- JSON Liquid context ({ subscriber: {...} })
+      condition TEXT,                     -- optional gate, e.g. 'skip_if_deep'
+      send_at TEXT NOT NULL,              -- UTC 'YYYY-MM-DD HH:MM:SS'
+      status TEXT NOT NULL DEFAULT 'pending',
+      attempts INTEGER NOT NULL DEFAULT 0,
+      last_error TEXT,
+      provider_id TEXT,                   -- Resend message id once sent
+      sent_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (assessment_id) REFERENCES assessments(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_email_jobs_due ON email_jobs(status, send_at);
+    CREATE INDEX IF NOT EXISTS idx_email_jobs_email ON email_jobs(email);
   `);
 
   migrateSource(db);

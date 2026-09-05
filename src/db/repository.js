@@ -155,6 +155,78 @@ function createRepository(db) {
     return result.lastInsertRowid;
   }
 
+  // ─── Scheduled funnel emails (email_jobs) ─────────────────────────────────
+
+  const enqueueEmailJobStmt = db.prepare(`
+    INSERT INTO email_jobs (email, first_name, template_key, assessment_id, context, condition, send_at)
+    VALUES (@email, @firstName, @templateKey, @assessmentId, @context, @condition, @sendAt)
+  `);
+
+  // Due = pending and its time has arrived. datetime('now') is UTC, matching
+  // how send_at is stored.
+  const getDueEmailJobsStmt = db.prepare(`
+    SELECT * FROM email_jobs
+    WHERE status = 'pending' AND send_at <= datetime('now')
+    ORDER BY send_at ASC, id ASC
+    LIMIT ?
+  `);
+
+  const markEmailJobSentStmt = db.prepare(`
+    UPDATE email_jobs
+    SET status = 'sent', provider_id = ?, sent_at = datetime('now'), attempts = attempts + 1
+    WHERE id = ?
+  `);
+
+  const markEmailJobSkippedStmt = db.prepare(`
+    UPDATE email_jobs SET status = 'skipped', last_error = ? WHERE id = ?
+  `);
+
+  // Bumps the attempt count; flips to 'failed' (stops retrying) once the cap
+  // is reached, otherwise leaves it 'pending' for the next pass.
+  const bumpEmailJobStmt = db.prepare(`
+    UPDATE email_jobs
+    SET attempts = attempts + 1,
+        last_error = ?,
+        status = CASE WHEN attempts + 1 >= ? THEN 'failed' ELSE 'pending' END
+    WHERE id = ?
+  `);
+
+  const hasDeepStmt = db.prepare(
+    "SELECT 1 FROM assessments WHERE email = ? AND assessment_type = 'deep' LIMIT 1"
+  );
+
+  function enqueueEmailJob(data) {
+    enqueueEmailJobStmt.run({
+      email: data.email,
+      firstName: data.firstName ?? null,
+      templateKey: data.templateKey,
+      assessmentId: data.assessmentId ?? null,
+      context: data.context ? JSON.stringify(data.context) : null,
+      condition: data.condition ?? null,
+      sendAt: data.sendAt,
+    });
+  }
+
+  function getDueEmailJobs(limit = 25) {
+    return getDueEmailJobsStmt.all(limit);
+  }
+
+  function markEmailJobSent(id, providerId) {
+    markEmailJobSentStmt.run(providerId ?? null, id);
+  }
+
+  function markEmailJobSkipped(id, reason) {
+    markEmailJobSkippedStmt.run(reason ?? null, id);
+  }
+
+  function markEmailJobFailed(id, error, maxAttempts = 5) {
+    bumpEmailJobStmt.run(error ?? null, maxAttempts, id);
+  }
+
+  function hasDeepAssessmentForEmail(email) {
+    return hasDeepStmt.get(email) !== undefined;
+  }
+
   return {
     insertAssessment,
     getAssessmentById,
@@ -169,6 +241,13 @@ function createRepository(db) {
     listAssessments,
     countAssessments,
     insertReminder,
+    // email_jobs
+    enqueueEmailJob,
+    getDueEmailJobs,
+    markEmailJobSent,
+    markEmailJobSkipped,
+    markEmailJobFailed,
+    hasDeepAssessmentForEmail,
   };
 }
 

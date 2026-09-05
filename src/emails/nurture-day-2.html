@@ -1,0 +1,45 @@
+<table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#1C1C1C" style="background-color:#1C1C1C;">
+  <tr>
+    <td align="center" style="padding:0;">
+      <table cellpadding="0" cellspacing="0" border="0" width="640" style="max-width:640px;width:100%;">
+
+        <!-- HEADER / LOGO -->
+        <tr><td align="center" style="padding:40px 30px 20px 30px;"><img src="https://embed.filekitcdn.com/e/emZMu9JAwpKZ72oCFrzRWb/b96qj83bKdy1VcnMHmtHPt?w=400&fit=clip" alt="The Autonomous Leader" width="400" style="display:block;max-width:400px;width:100%;height:auto;" /></td></tr>
+
+        <!-- GREETING -->
+        <tr><td style="padding:0 30px 20px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">{{ subscriber.first_name }},</td></tr>
+
+        <!-- BODY -->
+        <tr><td style="padding:0 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">Your overall level is {{ subscriber.tal_level | default: "your current" }}. That tells you the chapter you are in. It does not tell you why you are stuck.</td></tr>
+        <tr><td style="padding:0 30px 30px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">That is what the 9 P&rsquo;s are for.</td></tr>
+
+        <!-- DIVIDER -->
+        <tr><td style="padding:0 30px;"><table cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="border-top:1px solid #2a2a2a;font-size:1px;line-height:1px;">&nbsp;</td></tr></table></td></tr>
+
+        <!-- 9P DESCRIPTIONS -->
+        <tr><td style="padding:30px 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">The framework measures nine distinct areas of your business. Each one operates at its own level, with its own bottleneck and its own fix. Here is what each P actually measures:</td></tr>
+        <tr><td style="padding:0 30px 10px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">Pipeline</strong> &mdash; Can your business create demand on purpose, or does it depend on your personal hustle?</td></tr>
+        <tr><td style="padding:0 30px 10px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">Profit</strong> &mdash; Do you have a clear, predictable picture of where revenue comes from and where it goes?</td></tr>
+        <tr><td style="padding:0 30px 10px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">Perspective</strong> &mdash; What belief is keeping you at this level instead of the next one?</td></tr>
+        <tr><td style="padding:0 30px 10px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">Principles</strong> &mdash; Does your team know how to make decisions without asking you?</td></tr>
+        <tr><td style="padding:0 30px 10px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">Program</strong> &mdash; Before you hire a person, have you asked whether a system or tool can handle the job?</td></tr>
+        <tr><td style="padding:0 30px 10px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">People</strong> &mdash; Are the right people in the right roles, operating without your constant direction?</td></tr>
+        <tr><td style="padding:0 30px 10px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">Process</strong> &mdash; Does the playbook exist in writing, or does it live in your head?</td></tr>
+        <tr><td style="padding:0 30px 10px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">Progress</strong> &mdash; Are you measuring the right things early enough to act on them?</td></tr>
+        <tr><td style="padding:0 30px 30px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;"><strong style="color:#e0e0e0;">Power</strong> &mdash; Who makes which decisions, and are the right ones going to the right people?</td></tr>
+
+        <!-- CONSTRAINT / SUPERPOWER -->
+        <tr><td style="padding:0 30px 30px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">Your constraint &mdash; {{ subscriber.tal_constraint | default: "your primary constraint" }} &mdash; is the one P limiting all the others. When that one moves, the ceiling lifts across the board. Your superpower &mdash; {{ subscriber.tal_superpower | default: "your strongest area" }} &mdash; is proof that you already know how to build a P to a high level. The discipline that built {{ subscriber.tal_superpower | default: "your strongest area" }} is the same discipline your constraint needs.</td></tr>
+
+        <!-- DIVIDER -->
+        <tr><td style="padding:0 30px;"><table cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="border-top:1px solid #2a2a2a;font-size:1px;line-height:1px;">&nbsp;</td></tr></table></td></tr><!-- COMMUNITY CTA -->
+        <tr><td style="padding:30px 30px 16px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#d0d0d0;">If you want to go deeper on any of the 9 P&rsquo;s &mdash; I built a free course that covers each one. The constraint, the fix sequence, the one move at every level. It is inside the community alongside owners working through the same framework.</td></tr>
+        <tr><td align="center" style="padding:0 30px 30px 30px;"><table cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#F77316" style="background-color:#F77316;border-radius:4px;"><a href="https://www.skool.com/the-autonomous-leader-8930/about" style="display:inline-block;padding:14px 36px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#FFFFFF;text-decoration:none;">Join the Community &mdash; The 9P Course Is Inside</a></td></tr></table></td></tr>
+
+        <!-- FOOTER -->
+        <tr><td style="padding:0 30px 40px 30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#8A9BB0;">&mdash; Jonathan</td></tr>
+
+      </table>
+    </td>
+  </tr>
+</table>

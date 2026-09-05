@@ -12,6 +12,8 @@ const { toPublicResult } = require("./services/public-result");
 const { createSharePageRenderer, applyNoIndex } = require("./services/share-page");
 const { isAdminEnabled } = require("./services/admin-auth");
 const { startRetryLoop } = require("./services/kit-retry");
+const { startEmailScheduler } = require("./services/email/scheduler");
+const { isEnabled: emailEnabled } = require("./services/email/mailer");
 
 // ─── Configuration ──────────────────────────────────────────────────────────
 
@@ -40,6 +42,10 @@ const db = initializeDatabase();
 const repo = createRepository(db);
 
 console.log(`[DB] SQLite initialized. Counter at: ${repo.getCounter()}`);
+
+// Email scheduler (Resend). No-op until RESEND_API_KEY is set. Checks the
+// email_jobs queue every 60s; routes also trigger an immediate pass on enqueue.
+const emailScheduler = startEmailScheduler(repo, 60 * 1000);
 
 // ─── Express App ────────────────────────────────────────────────────────────
 
@@ -89,7 +95,7 @@ app.get("/admin", (req, res) => {
 app.use(express.static(path.join(__dirname, "../public")));
 
 // Mount API routes
-app.use("/api", createRoutes(repo));
+app.use("/api", createRoutes(repo, emailScheduler));
 app.use("/api/admin", createAdminRoutes(repo));
 
 // Health check
@@ -120,6 +126,7 @@ startRetryLoop(repo, 5 * 60 * 1000);
 app.listen(PORT, () => {
   console.log(`[Server] TAL Assessment running on port ${PORT} (${NODE_ENV})`);
   console.log(`[Server] Admin:    ${isAdminEnabled() ? "enabled at /admin" : "disabled (set ADMIN_PASSWORD to enable)"}`);
+  console.log(`[Server] Email:    ${emailEnabled() ? "Resend enabled" : "Resend disabled (set RESEND_API_KEY to enable)"}`);
   console.log(`[Server] Frontend: http://localhost:${PORT}`);
   console.log(`[Server] API:      http://localhost:${PORT}/api`);
 });
